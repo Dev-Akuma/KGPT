@@ -8,7 +8,7 @@ const Sidebar = ({
   return (
     <aside id="kgpt-sidebar" className={`sidebar ${isOpen ? 'open' : ''}`}>
       <div className="sidebar-header">
-        <div className="sidebar-title">KrishnaGPT 🪔</div>
+        <div className="sidebar-title">KrishnaGPT</div>
         <button className="sidebar-close" onClick={onClose} aria-label="Close sidebar">
           ×
         </button>

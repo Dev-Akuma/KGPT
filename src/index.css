@@ -1,9 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap');
 
 :root {
-  font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
-  line-height: 1.5;
+  font-family: 'Nunito', 'Inter', 'Segoe UI', sans-serif;
+  line-height: 1.62;
   font-weight: 400;
+  letter-spacing: 0.012em;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -21,4 +22,10 @@ body {
   min-width: 320px;
   min-height: 100vh;
   overflow: hidden;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
 }
