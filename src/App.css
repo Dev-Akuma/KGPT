@@ -210,7 +210,7 @@
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 22px;
 }
 
 .message-row {
@@ -240,6 +240,117 @@
 
 .message-bubble.user {
   background: var(--bg-bubble-user);
+}
+
+.assistant-message {
+  width: min(100%, 800px);
+  color: #e7eaf0;
+  font-size: 16px;
+  line-height: 1.82;
+  letter-spacing: 0.012em;
+}
+
+.assistant-message > *:first-child {
+  margin-top: 0;
+}
+
+.assistant-message > *:last-child {
+  margin-bottom: 0;
+}
+
+.assistant-message p {
+  margin: 0 0 14px;
+}
+
+.assistant-message h1,
+.assistant-message h2,
+.assistant-message h3,
+.assistant-message h4 {
+  margin: 18px 0 10px;
+  line-height: 1.4;
+  color: #f5f7fb;
+}
+
+.assistant-message h1 {
+  font-size: 1.42rem;
+}
+
+.assistant-message h2 {
+  font-size: 1.28rem;
+}
+
+.assistant-message h3 {
+  font-size: 1.14rem;
+}
+
+.assistant-message strong {
+  color: #fcfdff;
+  font-weight: 700;
+}
+
+.assistant-message em {
+  color: #d8e0ee;
+}
+
+.assistant-message ul,
+.assistant-message ol {
+  margin: 10px 0 14px;
+  padding-left: 24px;
+}
+
+.assistant-message li {
+  margin: 6px 0;
+}
+
+.assistant-message code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
+  font-size: 0.92em;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 2px 6px;
+}
+
+.assistant-message pre {
+  margin: 14px 0 16px;
+  background: #171a22;
+  border: 1px solid #2f3646;
+  border-radius: 14px;
+  padding: 14px 16px;
+  overflow-x: auto;
+}
+
+.assistant-message pre code {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  font-size: 0.9em;
+  line-height: 1.65;
+}
+
+.assistant-message blockquote {
+  margin: 14px 0;
+  padding: 8px 14px;
+  border-left: 3px solid #4f6fa8;
+  color: #cad4e7;
+  background: rgba(79, 111, 168, 0.08);
+  border-radius: 0 10px 10px 0;
+}
+
+.assistant-message hr {
+  border: 0;
+  border-top: 1px solid #313646;
+  margin: 16px 0;
+}
+
+.assistant-message a {
+  color: #9ec5ff;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.assistant-message a:hover {
+  color: #c0daff;
 }
 
 .empty-state {
@@ -383,8 +494,17 @@
 
 .loading-bubble {
   display: inline-flex;
+  width: 64px;
+  height: 34px;
+  justify-content: center;
   gap: 6px;
   align-items: center;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.loading-row {
+  margin-top: -4px;
 }
 
 .typing-dot {
