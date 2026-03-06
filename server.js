@@ -6,6 +6,25 @@ import { generateText } from 'ai';
 const app = express();
 const port = process.env.PORT || 3001;
 
+const MEMORY_EXTRACTION_PROMPT = `You analyze user messages and extract long-term user profile signals.
+
+Rules:
+- Return valid JSON only, with no markdown fences.
+- Keep insights concise and useful for long-term personalization.
+- If multiple signals imply a broader pattern, prefer archetypes over too many granular traits.
+- Do not invent sensitive clinical diagnoses.
+
+Return schema:
+{
+  "traits": string[],
+  "habits": string[],
+  "concerns": string[],
+  "goals": string[],
+  "archetypes": string[],
+  "communication_style": string,
+  "insights": string[]
+}`;
+
 const KRISHNA_GPT_SYSTEM_PROMPT = `You are KrishnaGPT, a calm and compassionate guidance assistant inspired by the wisdom of Krishna from the Bhagavad Gita.
 
 Purpose:
@@ -57,7 +76,7 @@ app.get('/api/health', (_req, res) => {
 });
 
 app.post('/api/chat', async (req, res) => {
-  const { input } = req.body || {};
+  const { input, userProfileContext } = req.body || {};
 
   if (!input || typeof input !== 'string') {
     return res.status(400).json({ error: 'A non-empty string "input" is required.' });
@@ -66,7 +85,9 @@ app.post('/api/chat', async (req, res) => {
   try {
     const { text } = await generateText({
       model: groq('llama-3.3-70b-versatile'),
-      system: KRISHNA_GPT_SYSTEM_PROMPT,
+      system: userProfileContext
+        ? `${KRISHNA_GPT_SYSTEM_PROMPT}\n\nUser profile context:\n${userProfileContext}`
+        : KRISHNA_GPT_SYSTEM_PROMPT,
       prompt: input,
     });
 
@@ -74,6 +95,31 @@ app.post('/api/chat', async (req, res) => {
   } catch (error) {
     const message = error?.message || 'Unknown upstream error';
     return res.status(500).json({ error: `Groq request failed: ${message}` });
+  }
+});
+
+app.post('/api/memory/extract', async (req, res) => {
+  const { message } = req.body || {};
+
+  if (!message || typeof message !== 'string') {
+    return res.status(400).json({ error: 'A non-empty string "message" is required.' });
+  }
+
+  try {
+    const { text } = await generateText({
+      model: groq('llama-3.3-70b-versatile'),
+      system: MEMORY_EXTRACTION_PROMPT,
+      prompt: `User message:\n${message}`,
+    });
+
+    const raw = (text || '').trim();
+    const normalized = raw.replace(/^```json\s*/i, '').replace(/```$/i, '').trim();
+    const parsed = JSON.parse(normalized || '{}');
+
+    return res.json({ insights: parsed });
+  } catch (error) {
+    const message = error?.message || 'Unknown upstream error';
+    return res.status(500).json({ error: `Memory extraction failed: ${message}` });
   }
 });
 

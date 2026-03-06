@@ -3,6 +3,7 @@ import Sidebar from '../components/Sidebar';
 import ChatInput from '../components/ChatInput';
 import ChatWindow from '../components/ChatWindow';
 import CalmBackground from '../components/CalmBackground';
+import UserProfilePanel from '../components/UserProfilePanel';
 import { useChatSessions } from '../hooks/useChatSessions';
 import { logout } from '../services/authService';
 import { useGroqChat } from '../useGroqChat';
@@ -17,13 +18,21 @@ const ChatPage = ({ user, onOpenLogin }) => {
     messagesLoading,
     sending,
     error,
+    memory,
+    memoryLoading,
     createNewChat,
     selectChat,
     sendMessage,
+    addManualMemoryItem,
+    removeMemoryItem,
+    updateCommunicationStyle,
+    clearMemory,
+    toggleMemoryLearning,
   } = useChatSessions(user);
   const guestChat = useGroqChat();
 
   const [input, setInput] = useState('');
+  const [isProfilePanelOpen, setIsProfilePanelOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(() =>
     typeof window !== 'undefined' ? window.innerWidth > 900 : true,
   );
@@ -82,6 +91,7 @@ const ChatPage = ({ user, onOpenLogin }) => {
         onNewChat={handleNewChat}
         userEmail={user?.email || 'Temporary chat'}
         onLoginRequest={onOpenLogin}
+        onOpenProfile={() => setIsProfilePanelOpen(true)}
         onLogout={logout}
       />
 
@@ -131,6 +141,20 @@ const ChatPage = ({ user, onOpenLogin }) => {
           <ChatInput value={input} onChange={setInput} onSend={handleSend} loading={isLoading} />
         </div>
       </main>
+
+      {isAuthenticated ? (
+        <UserProfilePanel
+          isOpen={isProfilePanelOpen}
+          onClose={() => setIsProfilePanelOpen(false)}
+          memory={memory}
+          memoryLoading={memoryLoading}
+          onAddItem={addManualMemoryItem}
+          onRemoveItem={removeMemoryItem}
+          onUpdateCommunicationStyle={updateCommunicationStyle}
+          onToggleMemoryLearning={toggleMemoryLearning}
+          onClearMemory={clearMemory}
+        />
+      ) : null}
     </div>
   );
 };

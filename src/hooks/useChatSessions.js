@@ -6,6 +6,17 @@ import {
   subscribeToMessages,
   updateChatTitle,
 } from '../services/chatService';
+import {
+  buildUserProfileContext,
+  clearUserMemory,
+  EMPTY_MEMORY,
+  extractInsightsFromMessage,
+  mergeUserMemory,
+  removeMemoryItem,
+  saveUserMemory,
+  setMemoryLearningEnabled,
+  subscribeToUserMemory,
+} from '../services/userMemoryService';
 
 function makeTitleFromMessage(message) {
   return message.trim().slice(0, 40) || 'New Chat';
@@ -19,6 +30,8 @@ export function useChatSessions(user) {
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
+  const [memory, setMemory] = useState(EMPTY_MEMORY);
+  const [memoryLoading, setMemoryLoading] = useState(true);
 
   const activeChatIdRef = useRef(activeChatId);
 
@@ -33,6 +46,8 @@ export function useChatSessions(user) {
       setActiveChatId(null);
       setChatsLoading(false);
       setMessagesLoading(false);
+      setMemory(EMPTY_MEMORY);
+      setMemoryLoading(false);
       return;
     }
 
@@ -55,6 +70,30 @@ export function useChatSessions(user) {
       (snapshotError) => {
         setError(snapshotError.message || 'Failed to load chats.');
         setChatsLoading(false);
+      },
+    );
+
+    return unsubscribe;
+  }, [user]);
+
+  useEffect(() => {
+    if (!user?.uid) {
+      setMemory(EMPTY_MEMORY);
+      setMemoryLoading(false);
+      return;
+    }
+
+    setMemoryLoading(true);
+
+    const unsubscribe = subscribeToUserMemory(
+      user.uid,
+      (nextMemory) => {
+        setMemory(nextMemory);
+        setMemoryLoading(false);
+      },
+      (snapshotError) => {
+        setError(snapshotError.message || 'Failed to load profile memory.');
+        setMemoryLoading(false);
       },
     );
 
@@ -123,6 +162,19 @@ export function useChatSessions(user) {
 
         await addMessage(user.uid, chatId, 'user', content);
 
+        let latestMemory = memory;
+
+        if (memory.memoryEnabled !== false) {
+          try {
+            const extracted = await extractInsightsFromMessage(content);
+            latestMemory = mergeUserMemory(memory, extracted);
+            await saveUserMemory(user.uid, latestMemory);
+            setMemory(latestMemory);
+          } catch (memoryError) {
+            setError(memoryError.message || 'Unable to update profile memory.');
+          }
+        }
+
         const activeChat = chats.find((chat) => chat.id === chatId);
         if (activeChat?.title === 'New Chat') {
           await updateChatTitle(user.uid, chatId, makeTitleFromMessage(content));
@@ -131,7 +183,10 @@ export function useChatSessions(user) {
         const response = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ input: content }),
+          body: JSON.stringify({
+            input: content,
+            userProfileContext: buildUserProfileContext(latestMemory),
+          }),
         });
 
         const data = await response.json();
@@ -154,7 +209,7 @@ export function useChatSessions(user) {
         setSending(false);
       }
     },
-    [user, sending, createNewChat, chats],
+    [user, sending, createNewChat, chats, memory],
   );
 
   return {
@@ -165,8 +220,60 @@ export function useChatSessions(user) {
     messagesLoading,
     sending,
     error,
+    memory,
+    memoryLoading,
     createNewChat,
     selectChat,
     sendMessage,
+    addManualMemoryItem: async (section, value) => {
+      if (!user?.uid || !Array.isArray(memory?.[section])) {
+        return;
+      }
+
+      const nextMemory = mergeUserMemory(memory, { [section]: [value] });
+      setMemory(nextMemory);
+      await saveUserMemory(user.uid, nextMemory);
+    },
+    removeMemoryItem: async (section, value) => {
+      if (!user?.uid) {
+        return;
+      }
+
+      const nextMemory = removeMemoryItem(memory, section, value);
+      setMemory(nextMemory);
+      await saveUserMemory(user.uid, nextMemory);
+    },
+    updateCommunicationStyle: async (value) => {
+      if (!user?.uid) {
+        return;
+      }
+
+      const nextMemory = {
+        ...memory,
+        communication_style: value.trim(),
+      };
+
+      setMemory(nextMemory);
+      await saveUserMemory(user.uid, nextMemory);
+    },
+    clearMemory: async () => {
+      if (!user?.uid) {
+        return;
+      }
+
+      await clearUserMemory(user.uid);
+      setMemory(EMPTY_MEMORY);
+    },
+    toggleMemoryLearning: async (enabled) => {
+      if (!user?.uid) {
+        return;
+      }
+
+      await setMemoryLearningEnabled(user.uid, enabled);
+      setMemory((previous) => ({
+        ...previous,
+        memoryEnabled: enabled,
+      }));
+    },
   };
 }

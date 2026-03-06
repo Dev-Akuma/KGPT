@@ -9,6 +9,7 @@ const Sidebar = ({
   onNewChat,
   userEmail,
   onLoginRequest,
+  onOpenProfile,
   onLogout,
 }) => {
   return (
@@ -54,16 +55,45 @@ const Sidebar = ({
           : null}
       </div>
 
-      <div className="profile-card">
+      <div
+        className={`profile-card ${isAuthenticated ? 'clickable' : ''}`}
+        role={isAuthenticated ? 'button' : undefined}
+        tabIndex={isAuthenticated ? 0 : undefined}
+        onClick={isAuthenticated ? onOpenProfile : undefined}
+        onKeyDown={
+          isAuthenticated
+            ? (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  onOpenProfile();
+                }
+              }
+            : undefined
+        }
+      >
         <div className="avatar-placeholder">K</div>
         <div>
           <div className="profile-name">{userEmail || 'User'}</div>
           {isAuthenticated ? (
-            <button className="logout-btn" type="button" onClick={onLogout}>
+            <button
+              className="logout-btn"
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onLogout();
+              }}
+            >
               Log out
             </button>
           ) : (
-            <button className="login-btn" type="button" onClick={onLoginRequest}>
+            <button
+              className="login-btn"
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onLoginRequest();
+              }}
+            >
               Sign in
             </button>
           )}
