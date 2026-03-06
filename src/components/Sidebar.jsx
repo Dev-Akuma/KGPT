@@ -2,8 +2,14 @@ const Sidebar = ({
   isOpen,
   onClose,
   conversations,
+  chatsLoading,
   activeConversationId,
+  isAuthenticated,
   onSelectConversation,
+  onNewChat,
+  userEmail,
+  onLoginRequest,
+  onLogout,
 }) => {
   return (
     <aside id="kgpt-sidebar" className={`sidebar ${isOpen ? 'open' : ''}`}>
@@ -14,31 +20,53 @@ const Sidebar = ({
         </button>
       </div>
 
-      <button className="new-chat-btn" type="button">
+      <button className="new-chat-btn" type="button" onClick={onNewChat}>
         + New Chat
       </button>
 
       <div className="history-list" role="list" aria-label="Chat history">
-        {conversations.map((conversation) => (
-          <button
-            key={conversation.id}
-            className={`history-item ${
-              conversation.id === activeConversationId ? 'active' : ''
-            }`}
-            type="button"
-            onClick={() => onSelectConversation(conversation.id)}
-            title={conversation.title}
-          >
-            {conversation.title}
-          </button>
-        ))}
+        {!isAuthenticated ? (
+          <div className="sidebar-status">
+            You are in temporary chat mode. Sign in to save history and switch across sessions.
+          </div>
+        ) : null}
+
+        {isAuthenticated && chatsLoading ? <div className="sidebar-status">Loading chats...</div> : null}
+
+        {isAuthenticated && !chatsLoading && conversations.length === 0 ? (
+          <div className="sidebar-status">No chats yet. Start a new conversation.</div>
+        ) : null}
+
+        {isAuthenticated && !chatsLoading
+          ? conversations.map((conversation) => (
+              <button
+                key={conversation.id}
+                className={`history-item ${
+                  conversation.id === activeConversationId ? 'active' : ''
+                }`}
+                type="button"
+                onClick={() => onSelectConversation(conversation.id)}
+                title={conversation.title}
+              >
+                {conversation.title}
+              </button>
+            ))
+          : null}
       </div>
 
       <div className="profile-card">
         <div className="avatar-placeholder">K</div>
         <div>
-          <div className="profile-name">Guest User</div>
-          <div className="profile-subtitle">Sign in to sync chats</div>
+          <div className="profile-name">{userEmail || 'User'}</div>
+          {isAuthenticated ? (
+            <button className="logout-btn" type="button" onClick={onLogout}>
+              Log out
+            </button>
+          ) : (
+            <button className="login-btn" type="button" onClick={onLoginRequest}>
+              Sign in
+            </button>
+          )}
         </div>
       </div>
     </aside>

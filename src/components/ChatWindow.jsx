@@ -3,7 +3,7 @@ import MessageBubble from './MessageBubble';
 
 const BOTTOM_THRESHOLD = 120;
 
-const ChatWindow = ({ messages, loading }) => {
+const ChatWindow = ({ messages, loading, messagesLoading }) => {
 	const containerRef = useRef(null);
 	const endRef = useRef(null);
 	const shouldAutoScrollRef = useRef(true);
@@ -47,7 +47,12 @@ const ChatWindow = ({ messages, loading }) => {
 
 	return (
 		<section ref={containerRef} className="chat-window" aria-live="polite">
-			{messages.length === 0 ? (
+			{messagesLoading ? (
+				<div className="empty-state">
+					<h1>Loading chat...</h1>
+					<p>Fetching your message history.</p>
+				</div>
+			) : messages.length === 0 ? (
 				<div className="empty-state">
 					<h1>What is on your mind today?</h1>
 					<p>

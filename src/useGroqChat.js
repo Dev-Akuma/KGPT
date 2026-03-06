@@ -4,6 +4,10 @@ export function useGroqChat() {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  const resetChat = () => {
+    setMessages([]);
+  };
+
   const sendMessage = async (content) => {
     const userMessage = { role: 'user', content };
     setMessages((prev) => [...prev, userMessage]);
@@ -33,5 +37,5 @@ export function useGroqChat() {
     }
   };
 
-  return { messages, sendMessage, loading };
+  return { messages, sendMessage, loading, resetChat };
 }
