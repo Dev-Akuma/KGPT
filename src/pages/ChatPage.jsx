@@ -123,6 +123,7 @@ const ChatPage = ({ user, onOpenLogin }) => {
             messages={currentMessages}
             loading={isLoading}
             messagesLoading={currentMessagesLoading}
+            activeChatId={currentActiveChatId}
           />
           <ChatInput value={input} onChange={setInput} onSend={handleSend} loading={isLoading} />
         </div>

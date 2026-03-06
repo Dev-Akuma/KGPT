@@ -3,10 +3,17 @@ import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
 
-const MessageBubble = ({ role, content, onTypingProgress }) => {
+const MessageBubble = ({
+  role,
+  content,
+  shouldAnimate = false,
+  onTypingProgress,
+}) => {
   const isAssistant = role === 'assistant';
-  const [typedContent, setTypedContent] = useState(isAssistant ? '' : content);
-  const animatedRef = useRef(false);
+  const [typedContent, setTypedContent] = useState(
+    isAssistant && shouldAnimate ? '' : content,
+  );
+  const animatedRef = useRef(!shouldAnimate);
   const onTypingProgressRef = useRef(onTypingProgress);
 
   useEffect(() => {
@@ -21,6 +28,13 @@ const MessageBubble = ({ role, content, onTypingProgress }) => {
 
     if (!content) {
       setTypedContent('');
+      animatedRef.current = !shouldAnimate;
+      return;
+    }
+
+    if (!shouldAnimate) {
+      setTypedContent(content);
+      animatedRef.current = true;
       return;
     }
 
@@ -43,7 +57,7 @@ const MessageBubble = ({ role, content, onTypingProgress }) => {
     }, 14);
 
     return () => clearInterval(intervalId);
-  }, [content, isAssistant]);
+  }, [content, isAssistant, shouldAnimate]);
 
   return (
     <div className={`message-row ${role}`}>

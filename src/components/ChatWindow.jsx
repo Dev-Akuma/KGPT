@@ -3,15 +3,66 @@ import MessageBubble from './MessageBubble';
 
 const BOTTOM_THRESHOLD = 120;
 
-const ChatWindow = ({ messages, loading, messagesLoading }) => {
+const ChatWindow = ({ messages, loading, messagesLoading, activeChatId }) => {
 	const containerRef = useRef(null);
 	const endRef = useRef(null);
 	const shouldAutoScrollRef = useRef(true);
+	const previousStateRef = useRef({ chatScopeKey: null, loading: false, messageCount: 0 });
 	const [typingTick, setTypingTick] = useState(0);
+	const [animatedMessageKey, setAnimatedMessageKey] = useState(null);
+	const chatScopeKey = activeChatId || 'guest';
+
+	const getMessageKey = useCallback(
+		(message, index) => message.id || `${chatScopeKey}-${index}-${message.role}-${message.content?.length || 0}`,
+		[chatScopeKey],
+	);
+
+	const shouldAnimateMessage = useCallback(
+		(message, index) => {
+			if (message.role !== 'assistant') {
+				return false;
+			}
+
+			return getMessageKey(message, index) === animatedMessageKey;
+		},
+		[animatedMessageKey, getMessageKey],
+	);
 
 	const handleTypingProgress = useCallback(() => {
 		setTypingTick((prev) => prev + 1);
 	}, []);
+
+	useEffect(() => {
+		const previous = previousStateRef.current;
+		const switchedChat = previous.chatScopeKey !== chatScopeKey;
+		const justFinishedLoadingCycle = previous.loading && !loading;
+
+		if (switchedChat || messagesLoading) {
+			setAnimatedMessageKey(null);
+			previousStateRef.current = {
+				chatScopeKey,
+				loading,
+				messageCount: messages.length,
+			};
+			return;
+		}
+
+		if (justFinishedLoadingCycle) {
+			const lastMessage = messages[messages.length - 1];
+
+			if (lastMessage?.role === 'assistant') {
+				setAnimatedMessageKey(getMessageKey(lastMessage, messages.length - 1));
+			} else {
+				setAnimatedMessageKey(null);
+			}
+		}
+
+		previousStateRef.current = {
+			chatScopeKey,
+			loading,
+			messageCount: messages.length,
+		};
+	}, [chatScopeKey, loading, messages, messagesLoading, getMessageKey]);
 
 	useEffect(() => {
 		const container = containerRef.current;
@@ -31,6 +82,10 @@ const ChatWindow = ({ messages, loading, messagesLoading }) => {
 	}, []);
 
 	useEffect(() => {
+		if (messagesLoading) {
+			return;
+		}
+
 		if (!shouldAutoScrollRef.current) {
 			return;
 		}
@@ -43,7 +98,7 @@ const ChatWindow = ({ messages, loading, messagesLoading }) => {
 		});
 
 		return () => cancelAnimationFrame(rafId);
-	}, [messages, loading, typingTick]);
+	}, [messages, loading, typingTick, messagesLoading]);
 
 	return (
 		<section ref={containerRef} className="chat-window" aria-live="polite">
@@ -64,9 +119,10 @@ const ChatWindow = ({ messages, loading, messagesLoading }) => {
 				<div className="message-list">
 					{messages.map((message, index) => (
 						<MessageBubble
-							key={index}
+							key={getMessageKey(message, index)}
 							role={message.role}
 							content={message.content}
+							shouldAnimate={shouldAnimateMessage(message, index)}
 							onTypingProgress={handleTypingProgress}
 						/>
 					))}
