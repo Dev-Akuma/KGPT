@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import ChatInput from '../components/ChatInput';
 import ChatWindow from '../components/ChatWindow';
+import CalmBackground from '../components/CalmBackground';
 import { useChatSessions } from '../hooks/useChatSessions';
 import { logout } from '../services/authService';
 import { useGroqChat } from '../useGroqChat';
@@ -65,6 +66,8 @@ const ChatPage = ({ user, onOpenLogin }) => {
 
   return (
     <div className={`app-shell ${isSidebarOpen ? 'sidebar-open' : 'sidebar-collapsed'}`}>
+      <CalmBackground />
+
       <Sidebar
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
