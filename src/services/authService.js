@@ -3,6 +3,7 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
   signOut,
 } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
@@ -32,8 +33,24 @@ export function toAuthErrorMessage(error) {
     return 'Google sign-in was cancelled.';
   }
 
+  if (code === 'auth/popup-blocked') {
+    return 'Popup was blocked by the browser. A redirect sign-in fallback has been triggered.';
+  }
+
+  if (code === 'auth/operation-not-allowed') {
+    return 'Google sign-in is not enabled in Firebase Authentication. Enable the Google provider in Firebase Console.';
+  }
+
   if (code === 'auth/unauthorized-domain') {
     return 'Current domain is not authorized. Add this domain in Firebase Authentication settings.';
+  }
+
+  if (code === 'auth/invalid-api-key') {
+    return 'Firebase API key is invalid for this project. Verify VITE_FIREBASE_* values.';
+  }
+
+  if (code === 'auth/account-exists-with-different-credential') {
+    return 'An account already exists with a different sign-in method for this email.';
   }
 
   return message || 'Authentication failed.';
@@ -64,9 +81,26 @@ export function subscribeToAuth(callback) {
 }
 
 export async function loginWithGoogle() {
-  const credential = await signInWithPopup(auth, googleProvider);
-  await ensureUserDocument(credential.user);
-  return credential.user;
+  try {
+    const credential = await signInWithPopup(auth, googleProvider);
+    await ensureUserDocument(credential.user);
+    return credential.user;
+  } catch (error) {
+    const code = error?.code || '';
+    const message = error?.message || '';
+
+    const shouldFallbackToRedirect =
+      code === 'auth/popup-blocked' ||
+      code === 'auth/cancelled-popup-request' ||
+      message.includes('Cross-Origin-Opener-Policy');
+
+    if (shouldFallbackToRedirect) {
+      await signInWithRedirect(auth, googleProvider);
+      return null;
+    }
+
+    throw error;
+  }
 }
 
 export async function loginWithEmail(email, password) {
