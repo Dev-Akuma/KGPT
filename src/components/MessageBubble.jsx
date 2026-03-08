@@ -13,69 +13,93 @@ const MessageBubble = ({
   forceCompleteToken = 0,
 }) => {
   const isAssistant = role === 'assistant';
-  const [typedContent, setTypedContent] = useState(
-    isAssistant && shouldAnimate ? '' : content,
-  );
+  const [fullResponse, setFullResponse] = useState(content || '');
+  const [typingText, setTypingText] = useState(isAssistant && shouldAnimate ? '' : content || '');
+  const [isTyping, setIsTyping] = useState(Boolean(isAssistant && shouldAnimate && content));
   const animatedRef = useRef(!shouldAnimate);
+  const intervalRef = useRef(null);
   const onTypingProgressRef = useRef(onTypingProgress);
+
+  const stopTyping = (nextText) => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
+    setTypingText(nextText);
+    setIsTyping(false);
+    animatedRef.current = true;
+  };
 
   useEffect(() => {
     onTypingProgressRef.current = onTypingProgress;
   }, [onTypingProgress]);
 
   useEffect(() => {
-    if (!isAssistant || !shouldAnimate || animatedRef.current) {
+    if (!isAssistant || !shouldAnimate || !isTyping) {
       return;
     }
 
-    animatedRef.current = true;
-    setTypedContent(content);
-  }, [content, forceCompleteToken, isAssistant, shouldAnimate]);
+    stopTyping(fullResponse);
+  }, [forceCompleteToken, fullResponse, isAssistant, isTyping, shouldAnimate]);
 
   useEffect(() => {
     if (!isAssistant) {
-      setTypedContent(content);
+      setFullResponse(content || '');
+      setTypingText(content || '');
+      setIsTyping(false);
       return;
     }
 
     if (!content) {
-      setTypedContent('');
+      setFullResponse('');
+      setTypingText('');
+      setIsTyping(false);
       animatedRef.current = !shouldAnimate;
       return;
     }
 
+    setFullResponse(content);
+
     if (!shouldAnimate) {
-      setTypedContent(content);
-      animatedRef.current = true;
+      stopTyping(content);
       return;
     }
 
     if (animatedRef.current) {
-      setTypedContent(content);
+      setTypingText(content);
+      setIsTyping(false);
       return;
     }
 
     let index = 0;
-    const intervalId = setInterval(() => {
+    setTypingText('');
+    setIsTyping(true);
+
+    intervalRef.current = setInterval(() => {
       index += 1;
       const nextChunk = content.slice(0, index);
-      setTypedContent(nextChunk);
+      setTypingText(nextChunk);
       onTypingProgressRef.current?.();
 
       if (index >= content.length) {
-        animatedRef.current = true;
-        clearInterval(intervalId);
+        stopTyping(content);
       }
     }, 20);
 
-    return () => clearInterval(intervalId);
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
   }, [content, isAssistant, shouldAnimate]);
 
   return (
     <div className={`message-row ${role}`}>
       {isAssistant ? (
         <article className="assistant-message" aria-label="Assistant response">
-          <ReactMarkdown remarkPlugins={MARKDOWN_PLUGINS}>{typedContent}</ReactMarkdown>
+          <ReactMarkdown remarkPlugins={MARKDOWN_PLUGINS}>{typingText}</ReactMarkdown>
         </article>
       ) : (
         <div className={`message-bubble ${role}`}>{content}</div>

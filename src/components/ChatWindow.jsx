@@ -135,6 +135,7 @@ const ChatWindow = ({ messages, loading, messagesLoading, activeChatId, forceCom
 								<span className="typing-dot" />
 								<span className="typing-dot" />
 							</div>
+							<span className="typing-label">KrishnaGPT is reflecting...</span>
 						</div>
 					) : null}
 
