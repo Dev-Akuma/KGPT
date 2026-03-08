@@ -80,7 +80,7 @@ const LoginPage = ({ onBackToGuest }) => {
         </form>
 
         <button type="button" onClick={submitWithGoogle} disabled={loading} className="login-google-btn">
-          Continue with Google
+          {isRegisterMode ? 'Create account with Google' : 'Continue with Google'}
         </button>
 
         <button

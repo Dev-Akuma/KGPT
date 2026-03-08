@@ -3,7 +3,6 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signInWithPopup,
-  signInWithRedirect,
   signOut,
 } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
@@ -34,7 +33,7 @@ export function toAuthErrorMessage(error) {
   }
 
   if (code === 'auth/popup-blocked') {
-    return 'Popup was blocked by the browser. A redirect sign-in fallback has been triggered.';
+    return 'Popup was blocked by the browser. Allow popups for this site and try Google sign-in again.';
   }
 
   if (code === 'auth/operation-not-allowed') {
@@ -51,6 +50,10 @@ export function toAuthErrorMessage(error) {
 
   if (code === 'auth/account-exists-with-different-credential') {
     return 'An account already exists with a different sign-in method for this email.';
+  }
+
+  if (code) {
+    return `${message || 'Authentication failed.'} (code: ${code})`;
   }
 
   return message || 'Authentication failed.';
@@ -81,26 +84,9 @@ export function subscribeToAuth(callback) {
 }
 
 export async function loginWithGoogle() {
-  try {
-    const credential = await signInWithPopup(auth, googleProvider);
-    await ensureUserDocument(credential.user);
-    return credential.user;
-  } catch (error) {
-    const code = error?.code || '';
-    const message = error?.message || '';
-
-    const shouldFallbackToRedirect =
-      code === 'auth/popup-blocked' ||
-      code === 'auth/cancelled-popup-request' ||
-      message.includes('Cross-Origin-Opener-Policy');
-
-    if (shouldFallbackToRedirect) {
-      await signInWithRedirect(auth, googleProvider);
-      return null;
-    }
-
-    throw error;
-  }
+  const credential = await signInWithPopup(auth, googleProvider);
+  await ensureUserDocument(credential.user);
+  return credential.user;
 }
 
 export async function loginWithEmail(email, password) {
