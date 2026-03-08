@@ -2,8 +2,23 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import MessageBubble from './MessageBubble';
 
 const BOTTOM_THRESHOLD = 120;
+const STARTER_PROMPTS = [
+	'Feeling overwhelmed',
+	'Finding purpose',
+	'Improving focus',
+	'Relationship struggles',
+	'Self-confidence',
+];
 
-const ChatWindow = ({ messages, loading, messagesLoading, activeChatId, forceCompleteToken = 0 }) => {
+const ChatWindow = ({
+	messages,
+	loading,
+	messagesLoading,
+	activeChatId,
+	forceCompleteToken = 0,
+	onStarterSelect,
+	starterDisabled = false,
+}) => {
 	const containerRef = useRef(null);
 	const endRef = useRef(null);
 	const shouldAutoScrollRef = useRef(true);
@@ -109,11 +124,26 @@ const ChatWindow = ({ messages, loading, messagesLoading, activeChatId, forceCom
 				</div>
 			) : messages.length === 0 ? (
 				<div className="empty-state">
-					<h1>What is on your mind today?</h1>
+					<h1>What would you like help with today?</h1>
 					<p>
 						Share what feels heavy or unclear, and KrishnaGPT will offer calm, reflective
 						guidance inspired by timeless wisdom.
 					</p>
+
+					<div className="starter-grid" role="list" aria-label="Conversation starters">
+						{STARTER_PROMPTS.map((starter) => (
+							<button
+								key={starter}
+								type="button"
+								role="listitem"
+								className="starter-btn"
+								onClick={() => onStarterSelect?.(starter)}
+								disabled={starterDisabled}
+							>
+								{starter}
+							</button>
+						))}
+					</div>
 				</div>
 			) : (
 				<div className="message-list">

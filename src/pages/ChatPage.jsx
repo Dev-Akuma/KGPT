@@ -100,6 +100,24 @@ const ChatPage = ({ user, onOpenLogin }) => {
     await guestChat.sendMessage(content);
   };
 
+  const handleStarterSelect = useCallback(
+    async (starter) => {
+      if (!starter || sending || guestChat.loading) {
+        return;
+      }
+
+      setTypingCompleteToken((previous) => previous + 1);
+
+      if (isAuthenticated) {
+        await sendMessage(starter);
+        return;
+      }
+
+      await guestChat.sendMessage(starter);
+    },
+    [guestChat, isAuthenticated, sendMessage, sending],
+  );
+
   const markMoodCheckInComplete = useCallback(() => {
     setShowMoodCheckIn(false);
 
@@ -251,6 +269,8 @@ const ChatPage = ({ user, onOpenLogin }) => {
             messagesLoading={currentMessagesLoading}
             activeChatId={currentActiveChatId}
             forceCompleteToken={typingCompleteToken}
+            onStarterSelect={handleStarterSelect}
+            starterDisabled={isLoading}
           />
           {showMoodCheckIn ? (
             <MoodCheckInCard disabled={isLoading} onSelectMood={handleMoodSelect} />
