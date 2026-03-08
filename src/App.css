@@ -590,6 +590,83 @@
   color: #d5d8df;
 }
 
+.daily-wisdom-card {
+  width: min(100%, 920px);
+  margin: 0 auto 14px;
+  border: 1px solid #425091;
+  border-radius: 16px;
+  padding: 14px;
+  background: linear-gradient(180deg, rgba(29, 39, 90, 0.92) 0%, rgba(21, 29, 70, 0.92) 100%);
+}
+
+.daily-wisdom-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.daily-wisdom-header h2 {
+  margin: 0;
+  font-size: 16px;
+  color: #eef1ff;
+}
+
+.daily-wisdom-dismiss-btn {
+  border: 1px solid #596ac4;
+  border-radius: 10px;
+  background: rgba(86, 105, 210, 0.2);
+  color: #edf1ff;
+  min-height: 34px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.daily-wisdom-card blockquote {
+  margin: 12px 0 8px;
+  font-size: 17px;
+  line-height: 1.55;
+  color: #f3f6ff;
+}
+
+.daily-wisdom-source {
+  margin: 0;
+  color: #c8d2f4;
+  font-size: 13px;
+}
+
+.daily-wisdom-prompt {
+  margin: 10px 0 0;
+  color: #d8dff7;
+  font-size: 14px;
+}
+
+.session-greeting-card {
+  width: min(100%, 920px);
+  margin: 0 auto 12px;
+  border: 1px solid #3f4f92;
+  border-radius: 16px;
+  padding: 14px;
+  background: linear-gradient(180deg, rgba(28, 37, 84, 0.92) 0%, rgba(20, 27, 64, 0.92) 100%);
+}
+
+.session-greeting-card h2 {
+  margin: 0;
+  font-size: 17px;
+  color: #eff2ff;
+}
+
+.session-greeting-card p {
+  margin: 8px 0 0;
+  color: #d4dcf7;
+  line-height: 1.55;
+}
+
+.session-greeting-prompt {
+  color: #edf1ff;
+  font-weight: 600;
+}
+
 .empty-state h1 {
   margin: 0;
   font-size: clamp(26px, 4vw, 38px);
@@ -793,7 +870,9 @@
 
 .input-meta {
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
   padding: 0 8px 2px;
 }
 
@@ -823,6 +902,113 @@
 .typing-label {
   color: #b8c0de;
   font-size: 13px;
+}
+
+.breathing-trigger-btn {
+  border: 1px solid #3d4da3;
+  border-radius: 999px;
+  background: rgba(70, 86, 178, 0.25);
+  color: #dfe6ff;
+  padding: 6px 10px;
+  min-height: 30px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.breathing-trigger-btn:hover:not(:disabled) {
+  background: rgba(90, 109, 221, 0.32);
+}
+
+.breathing-trigger-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.breathing-suggest-card {
+  width: min(100%, 760px);
+  border: 1px solid #33418c;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(37, 47, 103, 0.55) 0%, rgba(27, 35, 81, 0.55) 100%);
+  padding: 12px;
+}
+
+.breathing-suggest-card p {
+  margin: 0 0 10px;
+  color: #d6def9;
+}
+
+.breathing-suggest-card button {
+  border: 1px solid #4f62c8;
+  background: rgba(86, 105, 210, 0.28);
+  color: #edf1ff;
+  border-radius: 10px;
+  min-height: 40px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.breathing-card {
+  width: min(100%, 760px);
+  border: 1px solid #37458e;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(34, 44, 96, 0.82) 0%, rgba(24, 32, 74, 0.82) 100%);
+  padding: 14px;
+}
+
+.breathing-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.breathing-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #edf1ff;
+}
+
+.breathing-stop-btn {
+  border: 1px solid #5569d0;
+  border-radius: 10px;
+  background: rgba(82, 100, 203, 0.24);
+  color: #edf1ff;
+  min-height: 36px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.breathing-visual-wrap {
+  height: 150px;
+  display: grid;
+  place-items: center;
+}
+
+.breathing-circle {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #b7c4ff 0%, #6f86f4 42%, #3e4da8 100%);
+  box-shadow: 0 0 0 10px rgba(110, 132, 244, 0.15), 0 12px 36px rgba(0, 0, 0, 0.35);
+  transition: transform 140ms linear;
+}
+
+.breathing-phase {
+  margin: 0;
+  text-align: center;
+  font-size: 18px;
+  color: #f1f4ff;
+}
+
+.breathing-meta {
+  margin: 8px 0 0;
+  text-align: center;
+  color: #b9c3e7;
+  font-size: 13px;
+}
+
+.empty-breathing-row {
+  margin-top: 14px;
 }
 
 .typing-dot {
@@ -1319,6 +1505,22 @@
     display: none;
   }
 
+  .breathing-card,
+  .breathing-suggest-card {
+    width: 100%;
+  }
+
+  .breathing-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .breathing-stop-btn,
+  .breathing-suggest-card button,
+  .breathing-trigger-btn {
+    min-height: 44px;
+  }
+
   .login-card {
     padding: 22px;
     border-radius: 18px;
@@ -1326,6 +1528,26 @@
 
   .starter-grid {
     grid-template-columns: 1fr;
+  }
+
+  .daily-wisdom-card {
+    margin-bottom: 10px;
+    padding: 12px;
+  }
+
+  .session-greeting-card {
+    margin-bottom: 10px;
+    padding: 12px;
+  }
+
+  .daily-wisdom-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .daily-wisdom-dismiss-btn {
+    min-height: 44px;
+    width: 100%;
   }
 }
 

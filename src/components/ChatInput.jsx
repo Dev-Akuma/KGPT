@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-const ChatInput = ({ value, onChange, onSend, loading }) => {
+const ChatInput = ({ value, onChange, onSend, loading, onBreathingRequest }) => {
   const textareaRef = useRef(null);
 
   useEffect(() => {
@@ -67,6 +67,16 @@ const ChatInput = ({ value, onChange, onSend, loading }) => {
         </div>
         <div className="input-meta">
           <span className="input-hint">Enter to send • Shift + Enter for new line</span>
+          {onBreathingRequest ? (
+            <button
+              type="button"
+              className="breathing-trigger-btn"
+              onClick={onBreathingRequest}
+              disabled={loading}
+            >
+              Calm Breath
+            </button>
+          ) : null}
         </div>
       </div>
     </form>

@@ -12,6 +12,82 @@ import { useGroqChat } from '../useGroqChat';
 
 const DESKTOP_BREAKPOINT = 1024;
 const MOOD_CHECKIN_SESSION_KEY = 'kgpt:mood-checkin-shown';
+const BREATHING_SUGGESTION_SESSION_KEY = 'kgpt:breathing-suggestion-shown';
+const DAILY_WISDOM_LAST_DATE_KEY = 'kgpt:daily-wisdom-last-date';
+const DAILY_WISDOM_SESSION_DATE_KEY = 'kgpt:daily-wisdom-session-date';
+const SESSION_GREETING_KEY = 'kgpt:session-greeting-shown';
+const STRESS_SIGNAL_PATTERN =
+  /stress|stressed|anxious|anxiety|panic|overwhelm|overwhelmed|frustrated|sad|heavy|burnout|drained|tired/i;
+
+function getTodayKey() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function toDisplayName(user) {
+  const displayName = `${user?.displayName || ''}`.trim();
+  if (displayName) {
+    return displayName.split(/\s+/)[0];
+  }
+
+  const email = `${user?.email || ''}`.trim();
+  if (!email) {
+    return '';
+  }
+
+  const localPart = email.split('@')[0] || '';
+  return localPart ? localPart.charAt(0).toUpperCase() + localPart.slice(1) : '';
+}
+
+function hasMemorySignals(memory) {
+  if (!memory) {
+    return false;
+  }
+
+  return [
+    memory.concerns?.length,
+    memory.goals?.length,
+    memory.insights?.length,
+    memory.traits?.length,
+    memory.archetypes?.length,
+  ].some(Boolean);
+}
+
+function buildSessionGreeting(memory, user) {
+  const name = toDisplayName(user);
+  const title = name ? `Welcome back, ${name}.` : 'Welcome back.';
+
+  if (!hasMemorySignals(memory)) {
+    return {
+      title,
+      context: 'I am glad you are here again. We can continue from where you left off or begin fresh today.',
+      prompt: 'Would you like to continue a previous thread or explore what is present for you right now?',
+    };
+  }
+
+  const concern = memory.concerns?.[0];
+  const goal = memory.goals?.[0];
+  const insight = memory.insights?.[0];
+
+  const context = concern
+    ? `Last time you mentioned ${concern}.`
+    : goal
+      ? `You have been working toward ${goal}.`
+      : insight
+        ? `Last time you shared that ${insight}.`
+        : 'I still remember the themes we explored together recently.';
+
+  const prompt = concern
+    ? 'Would you like to continue that conversation?'
+    : goal
+      ? 'Would you like to continue building on that today?'
+      : 'Would you like to continue from that point today?';
+
+  return { title, context, prompt };
+}
 
 const ChatPage = ({ user, onOpenLogin }) => {
   const isAuthenticated = Boolean(user?.uid);
@@ -41,6 +117,10 @@ const ChatPage = ({ user, onOpenLogin }) => {
   const [activeUtilityPanel, setActiveUtilityPanel] = useState(null);
   const [typingCompleteToken, setTypingCompleteToken] = useState(0);
   const [showMoodCheckIn, setShowMoodCheckIn] = useState(false);
+  const [showDailyWisdom, setShowDailyWisdom] = useState(false);
+  const [sessionGreeting, setSessionGreeting] = useState(null);
+  const [showBreathingPrompt, setShowBreathingPrompt] = useState(false);
+  const [isBreathingActive, setIsBreathingActive] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(() =>
     typeof window !== 'undefined' ? window.innerWidth >= DESKTOP_BREAKPOINT : true,
   );
@@ -70,12 +150,39 @@ const ChatPage = ({ user, onOpenLogin }) => {
   }, []);
 
   useEffect(() => {
+    if (typeof window === 'undefined' || memoryLoading) {
+      return;
+    }
+
+    const hasShownGreeting = window.sessionStorage.getItem(SESSION_GREETING_KEY) === '1';
+    if (hasShownGreeting) {
+      return;
+    }
+
+    setSessionGreeting(buildSessionGreeting(memory, user));
+    window.sessionStorage.setItem(SESSION_GREETING_KEY, '1');
+  }, [memory, memoryLoading, user]);
+
+  useEffect(() => {
     if (typeof window === 'undefined') {
       return;
     }
 
     const hasShownMoodCheckIn = window.sessionStorage.getItem(MOOD_CHECKIN_SESSION_KEY) === '1';
     setShowMoodCheckIn(!hasShownMoodCheckIn);
+
+    const today = getTodayKey();
+    const sessionDate = window.sessionStorage.getItem(DAILY_WISDOM_SESSION_DATE_KEY);
+    const lastShownDate = window.localStorage.getItem(DAILY_WISDOM_LAST_DATE_KEY);
+
+    if (sessionDate === today || lastShownDate === today) {
+      setShowDailyWisdom(false);
+      return;
+    }
+
+    setShowDailyWisdom(true);
+    window.localStorage.setItem(DAILY_WISDOM_LAST_DATE_KEY, today);
+    window.sessionStorage.setItem(DAILY_WISDOM_SESSION_DATE_KEY, today);
   }, []);
 
   const handleSend = async () => {
@@ -153,6 +260,28 @@ const ChatPage = ({ user, onOpenLogin }) => {
   const currentMessagesLoading = isAuthenticated ? messagesLoading : false;
   const currentError = isAuthenticated ? error : '';
 
+  useEffect(() => {
+    if (typeof window === 'undefined' || isBreathingActive || currentMessages.length === 0) {
+      return;
+    }
+
+    const alreadySuggested =
+      window.sessionStorage.getItem(BREATHING_SUGGESTION_SESSION_KEY) === '1';
+
+    if (alreadySuggested) {
+      return;
+    }
+
+    const lastUserMessage = [...currentMessages]
+      .reverse()
+      .find((message) => message.role === 'user' && typeof message.content === 'string');
+
+    if (lastUserMessage && STRESS_SIGNAL_PATTERN.test(lastUserMessage.content)) {
+      setShowBreathingPrompt(true);
+      window.sessionStorage.setItem(BREATHING_SUGGESTION_SESSION_KEY, '1');
+    }
+  }, [currentMessages, isBreathingActive]);
+
   const handleNewChat = useCallback(async () => {
     if (isAuthenticated) {
       await createNewChat();
@@ -177,6 +306,25 @@ const ChatPage = ({ user, onOpenLogin }) => {
     },
     [isDesktopViewport, selectChat],
   );
+
+  const handleActivateBreathing = useCallback(() => {
+    setShowBreathingPrompt(false);
+    setIsBreathingActive(true);
+  }, []);
+
+  const handleStopBreathing = useCallback(() => {
+    setIsBreathingActive(false);
+  }, []);
+
+  const handleDismissDailyWisdom = useCallback(() => {
+    setShowDailyWisdom(false);
+  }, []);
+
+  useEffect(() => {
+    if (currentMessages.length > 0 && sessionGreeting) {
+      setSessionGreeting(null);
+    }
+  }, [currentMessages.length, sessionGreeting]);
 
   const handleDeleteConversation = useCallback(
     async (chatId) => {
@@ -271,11 +419,24 @@ const ChatPage = ({ user, onOpenLogin }) => {
             forceCompleteToken={typingCompleteToken}
             onStarterSelect={handleStarterSelect}
             starterDisabled={isLoading}
+            showBreathingPrompt={showBreathingPrompt}
+            breathingActive={isBreathingActive}
+            onActivateBreathing={handleActivateBreathing}
+            onStopBreathing={handleStopBreathing}
+            showDailyWisdom={showDailyWisdom}
+            onDismissDailyWisdom={handleDismissDailyWisdom}
+            sessionGreeting={currentMessages.length === 0 ? sessionGreeting : null}
           />
           {showMoodCheckIn ? (
             <MoodCheckInCard disabled={isLoading} onSelectMood={handleMoodSelect} />
           ) : null}
-          <ChatInput value={input} onChange={setInput} onSend={handleSend} loading={isLoading} />
+          <ChatInput
+            value={input}
+            onChange={setInput}
+            onSend={handleSend}
+            loading={isLoading}
+            onBreathingRequest={handleActivateBreathing}
+          />
         </div>
       </main>
 
