@@ -1,7 +1,10 @@
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
+  getDocs,
+  limit,
   onSnapshot,
   orderBy,
   query,
@@ -88,4 +91,12 @@ export async function updateChatTitle(userId, chatId, title) {
     title,
     updatedAt: serverTimestamp(),
   });
+}
+
+export async function deleteChat(userId, chatId) {
+  const messagesQuery = query(messagesRef(userId, chatId), limit(500));
+  const snapshot = await getDocs(messagesQuery);
+
+  await Promise.all(snapshot.docs.map((messageDoc) => deleteDoc(messageDoc.ref)));
+  await deleteDoc(chatRef(userId, chatId));
 }

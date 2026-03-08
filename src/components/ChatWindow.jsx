@@ -3,7 +3,7 @@ import MessageBubble from './MessageBubble';
 
 const BOTTOM_THRESHOLD = 120;
 
-const ChatWindow = ({ messages, loading, messagesLoading, activeChatId }) => {
+const ChatWindow = ({ messages, loading, messagesLoading, activeChatId, forceCompleteToken = 0 }) => {
 	const containerRef = useRef(null);
 	const endRef = useRef(null);
 	const shouldAutoScrollRef = useRef(true);
@@ -124,6 +124,7 @@ const ChatWindow = ({ messages, loading, messagesLoading, activeChatId }) => {
 							content={message.content}
 							shouldAnimate={shouldAnimateMessage(message, index)}
 							onTypingProgress={handleTypingProgress}
+							forceCompleteToken={forceCompleteToken}
 						/>
 					))}
 

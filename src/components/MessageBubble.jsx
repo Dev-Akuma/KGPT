@@ -10,6 +10,7 @@ const MessageBubble = ({
   content,
   shouldAnimate = false,
   onTypingProgress,
+  forceCompleteToken = 0,
 }) => {
   const isAssistant = role === 'assistant';
   const [typedContent, setTypedContent] = useState(
@@ -21,6 +22,15 @@ const MessageBubble = ({
   useEffect(() => {
     onTypingProgressRef.current = onTypingProgress;
   }, [onTypingProgress]);
+
+  useEffect(() => {
+    if (!isAssistant || !shouldAnimate || animatedRef.current) {
+      return;
+    }
+
+    animatedRef.current = true;
+    setTypedContent(content);
+  }, [content, forceCompleteToken, isAssistant, shouldAnimate]);
 
   useEffect(() => {
     if (!isAssistant) {
@@ -47,7 +57,7 @@ const MessageBubble = ({
 
     let index = 0;
     const intervalId = setInterval(() => {
-      index += 3;
+      index += 1;
       const nextChunk = content.slice(0, index);
       setTypedContent(nextChunk);
       onTypingProgressRef.current?.();
@@ -56,7 +66,7 @@ const MessageBubble = ({
         animatedRef.current = true;
         clearInterval(intervalId);
       }
-    }, 14);
+    }, 20);
 
     return () => clearInterval(intervalId);
   }, [content, isAssistant, shouldAnimate]);

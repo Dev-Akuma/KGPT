@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   addMessage,
   createChat,
+  deleteChat,
   subscribeToChats,
   subscribeToMessages,
   updateChatTitle,
@@ -140,6 +141,27 @@ export function useChatSessions(user) {
     setActiveChatId(chatId);
   }, []);
 
+  const deleteChatSession = useCallback(
+    async (chatId) => {
+      if (!user?.uid || !chatId) {
+        return;
+      }
+
+      setError('');
+
+      const remainingChats = chats.filter((chat) => chat.id !== chatId);
+      const fallbackChatId = remainingChats[0]?.id || null;
+
+      if (activeChatIdRef.current === chatId) {
+        setMessages([]);
+        setActiveChatId(fallbackChatId);
+      }
+
+      await deleteChat(user.uid, chatId);
+    },
+    [chats, user],
+  );
+
   const sendMessage = useCallback(
     async (rawContent) => {
       const content = rawContent.trim();
@@ -224,6 +246,7 @@ export function useChatSessions(user) {
     memoryLoading,
     createNewChat,
     selectChat,
+    deleteChat: deleteChatSession,
     sendMessage,
     addManualMemoryItem: async (section, value) => {
       if (!user?.uid || !Array.isArray(memory?.[section])) {

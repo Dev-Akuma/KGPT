@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 
 const Sidebar = ({
   isOpen,
@@ -10,10 +10,71 @@ const Sidebar = ({
   onSelectConversation,
   onNewChat,
   userEmail,
+  userName,
+  userPhotoUrl,
   onLoginRequest,
-  onOpenProfile,
+  onOpenSettings,
+  onOpenPersonalization,
+  onOpenUpgrade,
+  onOpenHelp,
+  onDeleteConversation,
   onLogout,
 }) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    if (!isMenuOpen) {
+      return;
+    }
+
+    const handlePointerDown = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isMenuOpen]);
+
+  const avatarInitials = useMemo(() => {
+    const source = (userName || userEmail || '').trim();
+    if (!source) {
+      return 'U';
+    }
+
+    if (source.includes('@')) {
+      return source.charAt(0).toUpperCase();
+    }
+
+    const parts = source.split(/\s+/).filter(Boolean);
+    if (parts.length === 1) {
+      return parts[0].slice(0, 2).toUpperCase();
+    }
+
+    return `${parts[0][0] || ''}${parts[1][0] || ''}`.toUpperCase();
+  }, [userEmail, userName]);
+
+  const closeMenu = () => {
+    setIsMenuOpen(false);
+  };
+
+  const runMenuAction = (action) => {
+    closeMenu();
+    action();
+  };
+
   return (
     <aside id="kgpt-sidebar" className={`sidebar ${isOpen ? 'open' : ''}`}>
       <div className="sidebar-header">
@@ -42,64 +103,86 @@ const Sidebar = ({
 
         {isAuthenticated && !chatsLoading
           ? conversations.map((conversation) => (
-              <button
-                key={conversation.id}
-                className={`history-item ${
-                  conversation.id === activeConversationId ? 'active' : ''
-                }`}
-                type="button"
-                onClick={() => onSelectConversation(conversation.id)}
-                title={conversation.title}
-              >
-                {conversation.title}
-              </button>
+              <div key={conversation.id} className="history-row">
+                <button
+                  className={`history-item ${
+                    conversation.id === activeConversationId ? 'active' : ''
+                  }`}
+                  type="button"
+                  onClick={() => onSelectConversation(conversation.id)}
+                  title={conversation.title}
+                >
+                  {conversation.title}
+                </button>
+
+                <button
+                  className="history-delete-btn"
+                  type="button"
+                  aria-label={`Delete conversation ${conversation.title}`}
+                  title="Delete conversation"
+                  onClick={() => {
+                    const shouldDelete = window.confirm('Delete this conversation?');
+                    if (shouldDelete) {
+                      onDeleteConversation(conversation.id);
+                    }
+                  }}
+                >
+                  🗑
+                </button>
+              </div>
             ))
           : null}
       </div>
 
-      <div
-        className={`profile-card ${isAuthenticated ? 'clickable' : ''}`}
-        role={isAuthenticated ? 'button' : undefined}
-        tabIndex={isAuthenticated ? 0 : undefined}
-        onClick={isAuthenticated ? onOpenProfile : undefined}
-        onKeyDown={
-          isAuthenticated
-            ? (event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault();
-                  onOpenProfile();
-                }
-              }
-            : undefined
-        }
-      >
-        <div className="avatar-placeholder">K</div>
-        <div>
-          <div className="profile-name">{userEmail || 'User'}</div>
-          {isAuthenticated ? (
-            <button
-              className="logout-btn"
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation();
-                onLogout();
-              }}
-            >
-              Log out
-            </button>
+      <div className="profile-area" ref={menuRef}>
+        <button
+          className={`profile-card ${isAuthenticated ? 'clickable' : ''}`}
+          type="button"
+          onClick={
+            isAuthenticated
+              ? () => setIsMenuOpen((previous) => !previous)
+              : onLoginRequest
+          }
+          aria-haspopup={isAuthenticated ? 'menu' : undefined}
+          aria-expanded={isAuthenticated ? isMenuOpen : undefined}
+        >
+          {userPhotoUrl ? (
+            <img className="avatar-image" src={userPhotoUrl} alt="User profile" />
           ) : (
-            <button
-              className="login-btn"
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation();
-                onLoginRequest();
-              }}
-            >
-              Sign in
-            </button>
+            <div className="avatar-placeholder">{avatarInitials}</div>
           )}
-        </div>
+
+          <div className="profile-copy">
+            <div className="profile-name">{userName || userEmail || 'User'}</div>
+            <div className="profile-subtitle">
+              {isAuthenticated ? 'Open profile menu' : 'Sign in to sync chats'}
+            </div>
+          </div>
+        </button>
+
+        {isAuthenticated && isMenuOpen ? (
+          <div className="profile-dropdown" role="menu" aria-label="Profile menu">
+            <button type="button" role="menuitem" onClick={() => runMenuAction(onOpenSettings)}>
+              Settings
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => runMenuAction(onOpenPersonalization)}
+            >
+              Personalization
+            </button>
+            <button type="button" role="menuitem" onClick={() => runMenuAction(onOpenUpgrade)}>
+              Upgrade Plan
+            </button>
+            <button type="button" role="menuitem" onClick={() => runMenuAction(onOpenHelp)}>
+              Help
+            </button>
+            <button type="button" role="menuitem" onClick={() => runMenuAction(onLogout)}>
+              Log Out
+            </button>
+          </div>
+        ) : null}
       </div>
     </aside>
   );

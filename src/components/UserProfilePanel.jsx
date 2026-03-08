@@ -12,6 +12,7 @@ const SECTION_CONFIG = [
 const UserProfilePanel = ({
   isOpen,
   onClose,
+  title = 'Your Memory Profile',
   memory,
   memoryLoading,
   onAddItem,
@@ -48,7 +49,7 @@ const UserProfilePanel = ({
         onClick={(event) => event.stopPropagation()}
       >
         <div className="profile-panel-header">
-          <h2>Your Memory Profile</h2>
+          <h2>{title}</h2>
           <button type="button" className="profile-panel-close" onClick={onClose}>
             ×
           </button>

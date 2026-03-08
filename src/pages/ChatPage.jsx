@@ -4,6 +4,7 @@ import ChatInput from '../components/ChatInput';
 import ChatWindow from '../components/ChatWindow';
 import CalmBackground from '../components/CalmBackground';
 import UserProfilePanel from '../components/UserProfilePanel';
+import UtilityPanel from '../components/UtilityPanel';
 import { useChatSessions } from '../hooks/useChatSessions';
 import { logout } from '../services/authService';
 import { useGroqChat } from '../useGroqChat';
@@ -24,6 +25,7 @@ const ChatPage = ({ user, onOpenLogin }) => {
     memoryLoading,
     createNewChat,
     selectChat,
+    deleteChat,
     sendMessage,
     addManualMemoryItem,
     removeMemoryItem,
@@ -34,7 +36,8 @@ const ChatPage = ({ user, onOpenLogin }) => {
   const guestChat = useGroqChat();
 
   const [input, setInput] = useState('');
-  const [isProfilePanelOpen, setIsProfilePanelOpen] = useState(false);
+  const [activeUtilityPanel, setActiveUtilityPanel] = useState(null);
+  const [typingCompleteToken, setTypingCompleteToken] = useState(0);
   const [isSidebarOpen, setIsSidebarOpen] = useState(() =>
     typeof window !== 'undefined' ? window.innerWidth >= DESKTOP_BREAKPOINT : true,
   );
@@ -67,6 +70,9 @@ const ChatPage = ({ user, onOpenLogin }) => {
     if (!input.trim()) {
       return;
     }
+
+    // Finish any in-progress assistant typing animation before sending the next prompt.
+    setTypingCompleteToken((previous) => previous + 1);
 
     const content = input;
     setInput('');
@@ -115,6 +121,13 @@ const ChatPage = ({ user, onOpenLogin }) => {
     [isDesktopViewport, selectChat],
   );
 
+  const handleDeleteConversation = useCallback(
+    async (chatId) => {
+      await deleteChat(chatId);
+    },
+    [deleteChat],
+  );
+
   const closeSidebar = useCallback(() => {
     setIsSidebarOpen(false);
   }, []);
@@ -123,12 +136,12 @@ const ChatPage = ({ user, onOpenLogin }) => {
     setIsSidebarOpen((prev) => !prev);
   }, []);
 
-  const openProfilePanel = useCallback(() => {
-    setIsProfilePanelOpen(true);
+  const openUtilityPanel = useCallback((panelKey) => {
+    setActiveUtilityPanel(panelKey);
   }, []);
 
-  const closeProfilePanel = useCallback(() => {
-    setIsProfilePanelOpen(false);
+  const closeUtilityPanel = useCallback(() => {
+    setActiveUtilityPanel(null);
   }, []);
 
   return (
@@ -143,10 +156,16 @@ const ChatPage = ({ user, onOpenLogin }) => {
         activeConversationId={currentActiveChatId}
         isAuthenticated={isAuthenticated}
         onSelectConversation={handleSelectConversation}
+        onDeleteConversation={handleDeleteConversation}
         onNewChat={handleNewChat}
         userEmail={user?.email || 'Temporary chat'}
+        userName={user?.displayName || ''}
+        userPhotoUrl={user?.photoURL || ''}
         onLoginRequest={onOpenLogin}
-        onOpenProfile={openProfilePanel}
+        onOpenSettings={() => openUtilityPanel('settings')}
+        onOpenPersonalization={() => openUtilityPanel('personalization')}
+        onOpenUpgrade={() => openUtilityPanel('upgrade')}
+        onOpenHelp={() => openUtilityPanel('help')}
         onLogout={logout}
       />
 
@@ -192,15 +211,17 @@ const ChatPage = ({ user, onOpenLogin }) => {
             loading={isLoading}
             messagesLoading={currentMessagesLoading}
             activeChatId={currentActiveChatId}
+            forceCompleteToken={typingCompleteToken}
           />
           <ChatInput value={input} onChange={setInput} onSend={handleSend} loading={isLoading} />
         </div>
       </main>
 
-      {isAuthenticated ? (
+      {isAuthenticated && activeUtilityPanel === 'personalization' ? (
         <UserProfilePanel
-          isOpen={isProfilePanelOpen}
-          onClose={closeProfilePanel}
+          isOpen
+          onClose={closeUtilityPanel}
+          title="Personalization"
           memory={memory}
           memoryLoading={memoryLoading}
           onAddItem={addManualMemoryItem}
@@ -208,6 +229,13 @@ const ChatPage = ({ user, onOpenLogin }) => {
           onUpdateCommunicationStyle={updateCommunicationStyle}
           onToggleMemoryLearning={toggleMemoryLearning}
           onClearMemory={clearMemory}
+        />
+      ) : null}
+
+      {isAuthenticated && activeUtilityPanel && activeUtilityPanel !== 'personalization' ? (
+        <UtilityPanel
+          panelKey={activeUtilityPanel}
+          onClose={closeUtilityPanel}
         />
       ) : null}
     </div>
