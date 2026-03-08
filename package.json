@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "server": "node server.js",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -13,8 +12,6 @@
   "dependencies": {
     "@ai-sdk/groq": "^3.0.29",
     "ai": "^6.0.116",
-    "dotenv": "^17.3.1",
-    "express": "^5.2.1",
     "firebase": "^11.10.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

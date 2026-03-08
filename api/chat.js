@@ -1,29 +1,5 @@
-import 'dotenv/config';
-import express from 'express';
 import { groq } from '@ai-sdk/groq';
 import { generateText } from 'ai';
-
-const app = express();
-const port = process.env.PORT || 3001;
-
-const MEMORY_EXTRACTION_PROMPT = `You analyze user messages and extract long-term user profile signals.
-
-Rules:
-- Return valid JSON only, with no markdown fences.
-- Keep insights concise and useful for long-term personalization.
-- If multiple signals imply a broader pattern, prefer archetypes over too many granular traits.
-- Do not invent sensitive clinical diagnoses.
-
-Return schema:
-{
-  "traits": string[],
-  "habits": string[],
-  "concerns": string[],
-  "goals": string[],
-  "archetypes": string[],
-  "communication_style": string,
-  "insights": string[]
-}`;
 
 const KRISHNA_GPT_SYSTEM_PROMPT = `You are KrishnaGPT, a calm and compassionate guidance assistant inspired by the wisdom of Krishna from the Bhagavad Gita.
 
@@ -64,19 +40,32 @@ Format:
 - Keep responses calm, structured, reflective, and supportive.
 - Aim to help the user feel less alone and more capable of the next sincere step.`;
 
-if (!process.env.GROQ_API_KEY) {
-  console.error('Missing GROQ_API_KEY in environment variables.');
-  process.exit(1);
+function normalizeBody(req) {
+  if (req.body && typeof req.body === 'object') {
+    return req.body;
+  }
+
+  if (typeof req.body === 'string') {
+    try {
+      return JSON.parse(req.body);
+    } catch {
+      return {};
+    }
+  }
+
+  return {};
 }
 
-app.use(express.json());
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
-app.get('/api/health', (_req, res) => {
-  res.json({ ok: true });
-});
+  if (!process.env.GROQ_API_KEY) {
+    return res.status(500).json({ error: 'Missing GROQ_API_KEY' });
+  }
 
-app.post('/api/chat', async (req, res) => {
-  const { input, userProfileContext } = req.body || {};
+  const { input, userProfileContext } = normalizeBody(req);
 
   if (!input || typeof input !== 'string') {
     return res.status(400).json({ error: 'A non-empty string "input" is required.' });
@@ -91,38 +80,9 @@ app.post('/api/chat', async (req, res) => {
       prompt: input,
     });
 
-    return res.json({ text: text || 'No response text returned.' });
+    return res.status(200).json({ text: text || 'No response text returned.' });
   } catch (error) {
     const message = error?.message || 'Unknown upstream error';
     return res.status(500).json({ error: `Groq request failed: ${message}` });
   }
-});
-
-app.post('/api/memory/extract', async (req, res) => {
-  const { message } = req.body || {};
-
-  if (!message || typeof message !== 'string') {
-    return res.status(400).json({ error: 'A non-empty string "message" is required.' });
-  }
-
-  try {
-    const { text } = await generateText({
-      model: groq('llama-3.3-70b-versatile'),
-      system: MEMORY_EXTRACTION_PROMPT,
-      prompt: `User message:\n${message}`,
-    });
-
-    const raw = (text || '').trim();
-    const normalized = raw.replace(/^```json\s*/i, '').replace(/```$/i, '').trim();
-    const parsed = JSON.parse(normalized || '{}');
-
-    return res.json({ insights: parsed });
-  } catch (error) {
-    const message = error?.message || 'Unknown upstream error';
-    return res.status(500).json({ error: `Memory extraction failed: ${message}` });
-  }
-});
-
-app.listen(port, () => {
-  console.log(`KGPT API listening on http://localhost:${port}`);
-});
+}

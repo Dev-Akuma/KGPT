@@ -1,6 +1,6 @@
 # KGPT
 
-KGPT is a full-stack Krishna-inspired guidance chat app built with React + Vite on the frontend and an Express API on the backend.
+KGPT is a full-stack Krishna-inspired guidance chat app built with React + Vite on the frontend and Vercel serverless API routes on the backend.
 
 It supports:
 
@@ -12,12 +12,13 @@ It supports:
 ## Tech Stack
 
 - Frontend: React 19, Vite
-- Backend: Express 5, AI SDK (`ai`) + Groq provider (`@ai-sdk/groq`)
+- Backend: Vercel Serverless Functions (`/api/*`), AI SDK (`ai`) + Groq provider (`@ai-sdk/groq`)
 - Database/Auth: Firebase Authentication + Firestore
 
 ## Project Structure
 
-- `server.js`: API server (`/api/chat`, `/api/memory/extract`, `/api/health`)
+- `api/chat.js`: serverless route for assistant responses (`POST /api/chat`)
+- `api/memory/extract.js`: serverless route for memory extraction (`POST /api/memory/extract`)
 - `src/pages/ChatPage.jsx`: main chat UI
 - `src/pages/LoginPage.jsx`: authentication UI
 - `src/hooks/useChatSessions.js`: chat/session + memory orchestration
@@ -33,7 +34,6 @@ Create a `.env` file in the project root:
 ```env
 # Backend
 GROQ_API_KEY=your_groq_api_key_here
-PORT=3001
 
 # Frontend (Vite + Firebase)
 VITE_FIREBASE_API_KEY=...
@@ -46,7 +46,7 @@ VITE_FIREBASE_APP_ID=...
 
 Notes:
 
-- `GROQ_API_KEY` is required by `server.js`.
+- `GROQ_API_KEY` is required by Vercel API routes in `api/*`.
 - Vite exposes only `VITE_*` variables to the frontend.
 - Firebase values must all belong to the same Firebase project.
 
@@ -58,39 +58,24 @@ Notes:
 npm install
 ```
 
-2. Start API server:
-
-```bash
-npm run server
-```
-
-3. Start frontend in another terminal:
+2. Start frontend:
 
 ```bash
 npm run dev
 ```
 
-4. Open the shown Vite URL (usually `http://localhost:5173`).
+3. Open the shown Vite URL (usually `http://localhost:5173`).
 
-During development, Vite proxies `/api/*` to `http://localhost:3001`.
+For full local API emulation, run with Vercel CLI (`vercel dev`) so `/api/*` functions execute locally.
 
 ## Available Scripts
 
 - `npm run dev`: start Vite dev server
-- `npm run server`: start Express API server
 - `npm run build`: production build
 - `npm run preview`: preview production build
 - `npm run lint`: run ESLint
 
 ## API Endpoints
-
-### `GET /api/health`
-
-Returns basic API status:
-
-```json
-{ "ok": true }
-```
 
 ### `POST /api/chat`
 
@@ -154,11 +139,11 @@ If memory learning is enabled, each user message can be analyzed via `/api/memor
 
 ## Troubleshooting
 
-- `Missing GROQ_API_KEY in environment variables.`
-- Fix: set `GROQ_API_KEY` in `.env`, then restart the API server.
+- `Missing GROQ_API_KEY`
+- Fix: set `GROQ_API_KEY` in your Vercel project environment variables (and local `.env` when using `vercel dev`).
 
 - Firebase auth errors like `configuration-not-found`, `operation-not-allowed`, or `unauthorized-domain`
 - Fix: verify `VITE_FIREBASE_*` values, enabled providers, and authorized domains in Firebase Console.
 
-- `404` from `/api/memory/extract`
-- Fix: usually means an old API process is running; restart `npm run server`.
+- `404` from `/api/chat` or `/api/memory/extract` in production
+- Fix: confirm the files exist at `api/chat.js` and `api/memory/extract.js`, then redeploy on Vercel.
