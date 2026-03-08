@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import ChatInput from '../components/ChatInput';
 import ChatWindow from '../components/ChatWindow';
@@ -7,6 +7,8 @@ import UserProfilePanel from '../components/UserProfilePanel';
 import { useChatSessions } from '../hooks/useChatSessions';
 import { logout } from '../services/authService';
 import { useGroqChat } from '../useGroqChat';
+
+const DESKTOP_BREAKPOINT = 1024;
 
 const ChatPage = ({ user, onOpenLogin }) => {
   const isAuthenticated = Boolean(user?.uid);
@@ -34,8 +36,32 @@ const ChatPage = ({ user, onOpenLogin }) => {
   const [input, setInput] = useState('');
   const [isProfilePanelOpen, setIsProfilePanelOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(() =>
-    typeof window !== 'undefined' ? window.innerWidth > 900 : true,
+    typeof window !== 'undefined' ? window.innerWidth >= DESKTOP_BREAKPOINT : true,
   );
+  const [isDesktopViewport, setIsDesktopViewport] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth >= DESKTOP_BREAKPOINT : true,
+  );
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia(`(min-width: ${DESKTOP_BREAKPOINT}px)`);
+    const syncLayout = (event) => {
+      const desktop = event.matches;
+      setIsDesktopViewport(desktop);
+
+      // Keep sidebar pinned open on desktop, collapsible on smaller screens.
+      if (desktop) {
+        setIsSidebarOpen(true);
+      }
+    };
+
+    syncLayout(mediaQuery);
+    mediaQuery.addEventListener('change', syncLayout);
+    return () => mediaQuery.removeEventListener('change', syncLayout);
+  }, []);
 
   const handleSend = async () => {
     if (!input.trim()) {
@@ -64,14 +90,46 @@ const ChatPage = ({ user, onOpenLogin }) => {
   const currentMessagesLoading = isAuthenticated ? messagesLoading : false;
   const currentError = isAuthenticated ? error : '';
 
-  const handleNewChat = async () => {
+  const handleNewChat = useCallback(async () => {
     if (isAuthenticated) {
       await createNewChat();
+      if (!isDesktopViewport) {
+        setIsSidebarOpen(false);
+      }
       return;
     }
 
     guestChat.resetChat();
-  };
+    if (!isDesktopViewport) {
+      setIsSidebarOpen(false);
+    }
+  }, [createNewChat, guestChat, isAuthenticated, isDesktopViewport]);
+
+  const handleSelectConversation = useCallback(
+    (chatId) => {
+      selectChat(chatId);
+      if (!isDesktopViewport) {
+        setIsSidebarOpen(false);
+      }
+    },
+    [isDesktopViewport, selectChat],
+  );
+
+  const closeSidebar = useCallback(() => {
+    setIsSidebarOpen(false);
+  }, []);
+
+  const toggleSidebar = useCallback(() => {
+    setIsSidebarOpen((prev) => !prev);
+  }, []);
+
+  const openProfilePanel = useCallback(() => {
+    setIsProfilePanelOpen(true);
+  }, []);
+
+  const closeProfilePanel = useCallback(() => {
+    setIsProfilePanelOpen(false);
+  }, []);
 
   return (
     <div className={`app-shell ${isSidebarOpen ? 'sidebar-open' : 'sidebar-collapsed'}`}>
@@ -79,31 +137,28 @@ const ChatPage = ({ user, onOpenLogin }) => {
 
       <Sidebar
         isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
+        onClose={closeSidebar}
         conversations={currentChats}
         chatsLoading={currentChatsLoading}
         activeConversationId={currentActiveChatId}
         isAuthenticated={isAuthenticated}
-        onSelectConversation={(chatId) => {
-          selectChat(chatId);
-          setIsSidebarOpen(false);
-        }}
+        onSelectConversation={handleSelectConversation}
         onNewChat={handleNewChat}
         userEmail={user?.email || 'Temporary chat'}
         onLoginRequest={onOpenLogin}
-        onOpenProfile={() => setIsProfilePanelOpen(true)}
+        onOpenProfile={openProfilePanel}
         onLogout={logout}
       />
 
       <div
-        className={`sidebar-overlay ${isSidebarOpen ? 'show' : ''}`}
-        onClick={() => setIsSidebarOpen(false)}
+        className={`sidebar-overlay ${isSidebarOpen && !isDesktopViewport ? 'show' : ''}`}
+        onClick={closeSidebar}
         role="button"
         tabIndex={0}
         aria-label="Close sidebar overlay"
         onKeyDown={(event) => {
           if (event.key === 'Enter' || event.key === ' ') {
-            setIsSidebarOpen(false);
+            closeSidebar();
           }
         }}
       />
@@ -113,7 +168,7 @@ const ChatPage = ({ user, onOpenLogin }) => {
           <button
             className="menu-btn"
             type="button"
-            onClick={() => setIsSidebarOpen((prev) => !prev)}
+            onClick={toggleSidebar}
             aria-label={isSidebarOpen ? 'Close sidebar' : 'Open sidebar'}
             aria-expanded={isSidebarOpen}
             aria-controls="kgpt-sidebar"
@@ -145,7 +200,7 @@ const ChatPage = ({ user, onOpenLogin }) => {
       {isAuthenticated ? (
         <UserProfilePanel
           isOpen={isProfilePanelOpen}
-          onClose={() => setIsProfilePanelOpen(false)}
+          onClose={closeProfilePanel}
           memory={memory}
           memoryLoading={memoryLoading}
           onAddItem={addManualMemoryItem}

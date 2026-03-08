@@ -28,8 +28,9 @@ body {
   background: #0f0f0f;
   color: #f3f4f6;
   min-width: 320px;
-  min-height: 100vh;
+  min-height: 100dvh;
   overflow: hidden;
+  overflow-x: hidden;
 }
 
 button,

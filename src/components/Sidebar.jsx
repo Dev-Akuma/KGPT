@@ -1,3 +1,5 @@
+import { memo } from 'react';
+
 const Sidebar = ({
   isOpen,
   onClose,
@@ -103,4 +105,4 @@ const Sidebar = ({
   );
 };
 
-export default Sidebar;
+export default memo(Sidebar);

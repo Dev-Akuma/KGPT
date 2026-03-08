@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
+
+const MARKDOWN_PLUGINS = [remarkGfm, remarkBreaks];
 
 const MessageBubble = ({
   role,
@@ -63,7 +65,7 @@ const MessageBubble = ({
     <div className={`message-row ${role}`}>
       {isAssistant ? (
         <article className="assistant-message" aria-label="Assistant response">
-          <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>{typedContent}</ReactMarkdown>
+          <ReactMarkdown remarkPlugins={MARKDOWN_PLUGINS}>{typedContent}</ReactMarkdown>
         </article>
       ) : (
         <div className={`message-bubble ${role}`}>{content}</div>
@@ -72,4 +74,4 @@ const MessageBubble = ({
   );
 };
 
-export default MessageBubble;
+export default memo(MessageBubble);
