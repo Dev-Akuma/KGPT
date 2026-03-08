@@ -5,11 +5,13 @@ import ChatWindow from '../components/ChatWindow';
 import CalmBackground from '../components/CalmBackground';
 import UserProfilePanel from '../components/UserProfilePanel';
 import UtilityPanel from '../components/UtilityPanel';
+import MoodCheckInCard from '../components/MoodCheckInCard';
 import { useChatSessions } from '../hooks/useChatSessions';
 import { logout } from '../services/authService';
 import { useGroqChat } from '../useGroqChat';
 
 const DESKTOP_BREAKPOINT = 1024;
+const MOOD_CHECKIN_SESSION_KEY = 'kgpt:mood-checkin-shown';
 
 const ChatPage = ({ user, onOpenLogin }) => {
   const isAuthenticated = Boolean(user?.uid);
@@ -38,6 +40,7 @@ const ChatPage = ({ user, onOpenLogin }) => {
   const [input, setInput] = useState('');
   const [activeUtilityPanel, setActiveUtilityPanel] = useState(null);
   const [typingCompleteToken, setTypingCompleteToken] = useState(0);
+  const [showMoodCheckIn, setShowMoodCheckIn] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(() =>
     typeof window !== 'undefined' ? window.innerWidth >= DESKTOP_BREAKPOINT : true,
   );
@@ -66,6 +69,15 @@ const ChatPage = ({ user, onOpenLogin }) => {
     return () => mediaQuery.removeEventListener('change', syncLayout);
   }, []);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const hasShownMoodCheckIn = window.sessionStorage.getItem(MOOD_CHECKIN_SESSION_KEY) === '1';
+    setShowMoodCheckIn(!hasShownMoodCheckIn);
+  }, []);
+
   const handleSend = async () => {
     if (!input.trim()) {
       return;
@@ -87,6 +99,33 @@ const ChatPage = ({ user, onOpenLogin }) => {
 
     await guestChat.sendMessage(content);
   };
+
+  const markMoodCheckInComplete = useCallback(() => {
+    setShowMoodCheckIn(false);
+
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.setItem(MOOD_CHECKIN_SESSION_KEY, '1');
+    }
+  }, []);
+
+  const handleMoodSelect = useCallback(
+    async (messageText) => {
+      if (!messageText || sending || guestChat.loading) {
+        return;
+      }
+
+      markMoodCheckInComplete();
+      setTypingCompleteToken((previous) => previous + 1);
+
+      if (isAuthenticated) {
+        await sendMessage(messageText);
+        return;
+      }
+
+      await guestChat.sendMessage(messageText);
+    },
+    [guestChat, isAuthenticated, markMoodCheckInComplete, sendMessage, sending],
+  );
 
   const isLoading = isAuthenticated ? sending : guestChat.loading;
   const currentMessages = isAuthenticated ? messages : guestChat.messages;
@@ -213,6 +252,9 @@ const ChatPage = ({ user, onOpenLogin }) => {
             activeChatId={currentActiveChatId}
             forceCompleteToken={typingCompleteToken}
           />
+          {showMoodCheckIn ? (
+            <MoodCheckInCard disabled={isLoading} onSelectMood={handleMoodSelect} />
+          ) : null}
           <ChatInput value={input} onChange={setInput} onSend={handleSend} loading={isLoading} />
         </div>
       </main>
