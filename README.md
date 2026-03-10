@@ -1,41 +1,139 @@
 # KGPT
 
-KGPT is a full-stack Krishna-inspired guidance chat app built with React + Vite on the frontend and Vercel serverless API routes on the backend.
+KGPT is a Krishna-inspired AI guidance chat application focused on calm, reflective conversations. It combines a modern chat experience with personalization features, optional therapeutic UX modules, Firebase-backed persistence, and serverless AI APIs on Vercel.
 
-It supports:
+## What The App Does
 
-- guest chat mode (temporary, not persisted)
-- authenticated mode with Firebase (email/password + Google)
-- persistent chat history in Firestore
-- profile memory extraction and personalization context per user
+- Supports guest chat mode for temporary conversations.
+- Supports authenticated mode with persistent chats and memory profile.
+- Uses long-term profile memory to personalize responses.
+- Provides guided UX modules for wellbeing:
+  - Daily mood check-in.
+  - Daily wisdom reflection card.
+  - Personalized session greeting.
+  - Guided conversation starters.
+  - Optional breathing exercise module.
+- Includes assistant typing animation and polished sidebar/profile interactions.
+
+## Core Experience
+
+- Conversational AI assistant inspired by Bhagavad Gita principles.
+- Message-by-message chat interface with markdown rendering.
+- Session and historical chat support.
+- Personalized follow-up context using stored memory insights.
+
+## Feature Highlights
+
+### Chat and Message UX
+
+- Assistant typing animation renders responses character-by-character.
+- Ongoing typing animation is force-completed if user sends a new message.
+- Thinking indicator shown while waiting for assistant response.
+- Markdown formatting support for assistant messages.
+
+### Empty-State Guidance
+
+- Starter prompts shown only when a chat is empty.
+- Starter clicks auto-send the selected prompt.
+- Starter cards auto-hide once messages exist.
+
+### Mood and Reflection Modules
+
+- Daily mood check-in card shown once per session.
+- Mood choices auto-send contextual user messages.
+- Daily wisdom quote card shown once per day.
+- Personalized session greeting generated from memory insights.
+- Generic greeting fallback when no memory is available.
+
+### Breathing Exercise Module
+
+- Manual trigger button in composer (`Calm Breath`).
+- Optional stress-aware suggestion card in chat.
+- Guided breathing phases:
+  - Inhale 4s.
+  - Hold 4s.
+  - Exhale 6s.
+- Animated breathing circle with smooth looping.
+- Stop button to end the exercise.
+
+### Sidebar and Conversation Management
+
+- Responsive sidebar:
+  - Desktop: layout sidebar.
+  - Mobile/tablet: overlay drawer.
+- Chat deletion per conversation with confirmation prompt.
+- Active chat reset behavior on delete.
+
+### Profile and Personalization UX
+
+- Avatar button with image fallback to initials.
+- Profile dropdown menu:
+  - Settings.
+  - Personalization.
+  - Upgrade Plan placeholder.
+  - Help.
+  - Log Out.
+- Personalization panel integrates memory controls and editing.
 
 ## Tech Stack
 
-- Frontend: React 19, Vite
-- Backend: Vercel Serverless Functions (`/api/*`), AI SDK (`ai`) + Groq provider (`@ai-sdk/groq`)
-- Database/Auth: Firebase Authentication + Firestore
+- Frontend: React 19 + Vite
+- Backend: Vercel Serverless Functions (`/api/*`)
+- AI: `ai` SDK + `@ai-sdk/groq` (`llama-3.3-70b-versatile`)
+- Auth + Database: Firebase Authentication + Firestore
+- Deployment: Vercel
+
+## Architecture Overview
+
+- Frontend sends chat requests to `/api/chat`.
+- Memory extraction requests go to `/api/memory/extract`.
+- Authenticated chat history and memory profile are stored in Firestore.
+- Guest chat runs local in-memory state only.
 
 ## Project Structure
 
-- `api/chat.js`: serverless route for assistant responses (`POST /api/chat`)
-- `api/memory/extract.js`: serverless route for memory extraction (`POST /api/memory/extract`)
-- `src/pages/ChatPage.jsx`: main chat UI
-- `src/pages/LoginPage.jsx`: authentication UI
-- `src/hooks/useChatSessions.js`: chat/session + memory orchestration
-- `src/services/authService.js`: Firebase auth helpers
-- `src/services/chatService.js`: Firestore chat CRUD + subscriptions
-- `src/services/userMemoryService.js`: memory extraction, merge, persistence
-- `src/services/firebase.js`: Firebase app/auth/db initialization
+```text
+KGPT/
+  api/
+    chat.js
+    memory/
+      extract.js
+  public/
+  src/
+    components/
+      BreathingExerciseMessage.jsx
+      CalmBackground.jsx
+      ChatInput.jsx
+      ChatWindow.jsx
+      DailyWisdomCard.jsx
+      MessageBubble.jsx
+      MoodCheckInCard.jsx
+      SessionGreetingCard.jsx
+      Sidebar.jsx
+      UserProfilePanel.jsx
+      UtilityPanel.jsx
+    hooks/
+      useChatSessions.js
+    pages/
+      ChatPage.jsx
+      LoginPage.jsx
+    services/
+      authService.js
+      chatService.js
+      firebase.js
+      userMemoryService.js
+    useGroqChat.js
+```
 
 ## Environment Variables
 
-Create a `.env` file in the project root:
+Create a `.env` file in the project root.
 
 ```env
-# Backend
+# AI backend
 GROQ_API_KEY=your_groq_api_key_here
 
-# Frontend (Vite + Firebase)
+# Firebase client config
 VITE_FIREBASE_API_KEY=...
 VITE_FIREBASE_AUTH_DOMAIN=...
 VITE_FIREBASE_PROJECT_ID=...
@@ -46,71 +144,92 @@ VITE_FIREBASE_APP_ID=...
 
 Notes:
 
-- `GROQ_API_KEY` is required by Vercel API routes in `api/*`.
-- Vite exposes only `VITE_*` variables to the frontend.
-- Firebase values must all belong to the same Firebase project.
+- `GROQ_API_KEY` is required by `api/chat.js` and `api/memory/extract.js`.
+- Only `VITE_*` variables are exposed to frontend code.
+- Firebase values must belong to the same Firebase project.
 
 ## Local Development
 
-1. Install dependencies:
+### 1) Install dependencies
 
 ```bash
 npm install
 ```
 
-2. Start frontend:
+### 2) Run frontend
 
 ```bash
 npm run dev
 ```
 
-3. Open the shown Vite URL (usually `http://localhost:5173`).
+### 3) Run local serverless APIs (recommended)
 
-For full local API emulation, run with Vercel CLI (`vercel dev`) so `/api/*` functions execute locally.
+Use Vercel CLI for full local parity with production APIs.
+
+```bash
+vercel dev
+```
+
+Important:
+
+- The current Vite proxy in `vite.config.js` points `/api` to `http://localhost:3001`.
+- Since backend is serverless (not Express), prefer `vercel dev` for API testing.
+- If you only run `npm run dev`, API calls may fail unless proxy target is adjusted.
 
 ## Available Scripts
 
-- `npm run dev`: start Vite dev server
-- `npm run build`: production build
-- `npm run preview`: preview production build
-- `npm run lint`: run ESLint
+- `npm run dev` starts Vite dev server.
+- `npm run build` builds production frontend assets.
+- `npm run preview` previews production frontend build.
+- `npm run lint` runs ESLint.
 
-## API Endpoints
+## API Reference
 
 ### `POST /api/chat`
 
-Generate assistant response.
+Generates assistant text.
 
-Request body:
+Request:
 
 ```json
 {
-  "input": "I feel stuck and distracted lately.",
+  "input": "I feel uncertain about my career.",
   "userProfileContext": "Traits: reflective, disciplined"
 }
 ```
 
-`userProfileContext` is optional and used for personalized responses.
-
-### `POST /api/memory/extract`
-
-Extract structured long-term memory signals from a user message.
-
-Request body:
+Response:
 
 ```json
 {
-  "message": "I overthink exams and want a consistent study routine."
+  "text": "...assistant response..."
 }
 ```
 
-Response body:
+Notes:
+
+- `userProfileContext` is optional.
+- Returns `405` for non-POST.
+
+### `POST /api/memory/extract`
+
+Extracts structured memory insights from a user message.
+
+Request:
+
+```json
+{
+  "message": "I overthink exams and want a consistent routine."
+}
+```
+
+Response:
 
 ```json
 {
   "insights": {
     "traits": ["reflective"],
-    "habits": ["inconsistent study routine"],
+    "habits": ["inconsistent routine"],
     "concerns": ["exam anxiety"],
     "goals": ["build consistency"],
     "archetypes": ["reflective overthinker"],
@@ -120,30 +239,72 @@ Response body:
 }
 ```
 
-## Auth and Data Flow
+Notes:
 
-- Unauthenticated users can chat in temporary mode (messages are not saved).
-- Authenticated users get persisted Firestore chat sessions under `users/{uid}/chats/{chatId}`.
-- Messages are stored under `users/{uid}/chats/{chatId}/messages`.
-- Memory profile data is stored under `users/{uid}/profile/memory`.
+- Returns `405` for non-POST.
+- Backend sanitizes and parses JSON output from model response.
 
-If memory learning is enabled, each user message can be analyzed via `/api/memory/extract`, merged with existing memory, and reused as context for `/api/chat`.
+## Data Model
 
-## Firebase Setup Checklist
+Authenticated user data is stored under:
 
-- Create a Firebase project.
-- Enable Authentication providers you plan to use (Email/Password and Google).
-- Add your local/dev domains to authorized domains.
-- Create a Firestore database.
-- Add the Firebase Web App config values to `.env` as `VITE_*` variables.
+- `users/{uid}`
+- `users/{uid}/chats/{chatId}`
+- `users/{uid}/chats/{chatId}/messages/{messageId}`
+- `users/{uid}/profile/memory`
+
+Chat docs include metadata like title and timestamps.
+
+Message docs include role, content, and timestamp.
+
+Memory doc includes:
+
+- `traits`, `habits`, `concerns`, `goals`, `archetypes`, `insights`
+- `communication_style`
+- `memoryEnabled`
+
+## Client Storage Keys
+
+The app uses browser storage to control one-time UX modules.
+
+- `sessionStorage['kgpt:mood-checkin-shown']`
+- `sessionStorage['kgpt:breathing-suggestion-shown']`
+- `sessionStorage['kgpt:daily-wisdom-session-date']`
+- `sessionStorage['kgpt:session-greeting-shown']`
+- `localStorage['kgpt:daily-wisdom-last-date']`
+
+## Deployment (Vercel)
+
+1. Push repository to GitHub.
+2. Import project in Vercel.
+3. Add environment variables:
+  - `GROQ_API_KEY`
+  - all required `VITE_FIREBASE_*` values
+4. Deploy.
+
+Expected production API routes:
+
+- `/api/chat`
+- `/api/memory/extract`
 
 ## Troubleshooting
 
-- `Missing GROQ_API_KEY`
-- Fix: set `GROQ_API_KEY` in your Vercel project environment variables (and local `.env` when using `vercel dev`).
+- `404` for `/api/chat` or `/api/memory/extract` in production.
+- Ensure `api/chat.js` and `api/memory/extract.js` exist at repo root and redeploy.
 
-- Firebase auth errors like `configuration-not-found`, `operation-not-allowed`, or `unauthorized-domain`
-- Fix: verify `VITE_FIREBASE_*` values, enabled providers, and authorized domains in Firebase Console.
+- `Missing GROQ_API_KEY`.
+- Add `GROQ_API_KEY` in Vercel project env vars and redeploy.
 
-- `404` from `/api/chat` or `/api/memory/extract` in production
-- Fix: confirm the files exist at `api/chat.js` and `api/memory/extract.js`, then redeploy on Vercel.
+- Firebase auth/provider errors (`configuration-not-found`, `operation-not-allowed`, `unauthorized-domain`).
+- Verify Firebase project config, enabled providers, and authorized domains.
+
+- Local dev chat API failures with `npm run dev`.
+- Use `vercel dev` or update `vite.config.js` API proxy target to a running local API endpoint.
+
+## Product Direction Notes
+
+KGPT is designed as supportive reflective guidance, inspired by Krishna's wisdom.
+
+- It does not claim to be Krishna.
+- It is not a replacement for professional medical or mental health care.
+- For severe distress or crisis, users should seek immediate qualified support.

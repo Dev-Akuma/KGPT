@@ -127,7 +127,7 @@ const UserProfilePanel = ({
                       setDraftBySection((prev) => ({ ...prev, [section.key]: '' }));
                     }}
                   >
-                    Add
+                    +
                   </button>
                 </div>
               </div>
