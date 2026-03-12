@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import KGPTLogo from '../components/KGPTLogo';
 import {
   loginWithEmail,
   loginWithGoogle,
@@ -47,7 +48,10 @@ const LoginPage = ({ onBackToGuest }) => {
   return (
     <div className="login-page">
       <div className="login-card">
-        <h1>KrishnaGPT</h1>
+        <div className="brand-lockup login-brand-lockup">
+          <KGPTLogo className="brand-mark brand-mark-login" />
+          <h1>KrishnaGPT</h1>
+        </div>
         <p className="login-subtitle">Sign in to continue your chat history.</p>
 
         <form onSubmit={submitWithEmail} className="login-form">

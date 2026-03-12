@@ -6,8 +6,9 @@ import CalmBackground from '../components/CalmBackground';
 import UserProfilePanel from '../components/UserProfilePanel';
 import UtilityPanel from '../components/UtilityPanel';
 import MoodCheckInCard from '../components/MoodCheckInCard';
+import KGPTLogo from '../components/KGPTLogo';
 import { useChatSessions } from '../hooks/useChatSessions';
-import { logout } from '../services/authService';
+import { deleteCurrentUserAccount, logout, toAuthErrorMessage } from '../services/authService';
 import { useGroqChat } from '../useGroqChat';
 
 const DESKTOP_BREAKPOINT = 1024;
@@ -121,6 +122,8 @@ const ChatPage = ({ user, onOpenLogin }) => {
   const [sessionGreeting, setSessionGreeting] = useState(null);
   const [showBreathingPrompt, setShowBreathingPrompt] = useState(false);
   const [isBreathingActive, setIsBreathingActive] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [deleteAccountError, setDeleteAccountError] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(() =>
     typeof window !== 'undefined' ? window.innerWidth >= DESKTOP_BREAKPOINT : true,
   );
@@ -342,12 +345,49 @@ const ChatPage = ({ user, onOpenLogin }) => {
   }, []);
 
   const openUtilityPanel = useCallback((panelKey) => {
+    setDeleteAccountError('');
     setActiveUtilityPanel(panelKey);
   }, []);
 
   const closeUtilityPanel = useCallback(() => {
+    setDeleteAccountError('');
     setActiveUtilityPanel(null);
   }, []);
+
+  const handleDeleteAccount = useCallback(async () => {
+    if (!isAuthenticated || deletingAccount) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      'Delete your account permanently? This will remove all chats and profile memory and cannot be undone.',
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    const typedConfirmation = window.prompt('Type DELETE to confirm account deletion.');
+
+    if (typedConfirmation !== 'DELETE') {
+      setDeleteAccountError('Deletion cancelled. Please type DELETE exactly to confirm.');
+      return;
+    }
+
+    setDeleteAccountError('');
+    setDeletingAccount(true);
+
+    try {
+      await deleteCurrentUserAccount();
+      setActiveUtilityPanel(null);
+    } catch (deleteError) {
+      setDeleteAccountError(
+        toAuthErrorMessage(deleteError) || 'Unable to delete account. Please try again.',
+      );
+    } finally {
+      setDeletingAccount(false);
+    }
+  }, [deletingAccount, isAuthenticated]);
 
   return (
     <div className={`app-shell ${isSidebarOpen ? 'sidebar-open' : 'sidebar-collapsed'}`}>
@@ -399,7 +439,10 @@ const ChatPage = ({ user, onOpenLogin }) => {
           >
             ☰
           </button>
-          <div className="top-title">KrishnaGPT</div>
+          <div className="brand-lockup top-brand-lockup">
+            <KGPTLogo className="brand-mark brand-mark-top" />
+            <div className="top-title">KrishnaGPT</div>
+          </div>
         </div>
 
         {!isAuthenticated ? (
@@ -459,6 +502,9 @@ const ChatPage = ({ user, onOpenLogin }) => {
         <UtilityPanel
           panelKey={activeUtilityPanel}
           onClose={closeUtilityPanel}
+          onDeleteAccount={handleDeleteAccount}
+          deletingAccount={deletingAccount}
+          deleteAccountError={deleteAccountError}
         />
       ) : null}
     </div>

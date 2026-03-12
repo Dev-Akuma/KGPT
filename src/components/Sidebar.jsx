@@ -1,4 +1,5 @@
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import KGPTLogo from './KGPTLogo';
 
 const Sidebar = ({
   isOpen,
@@ -78,7 +79,10 @@ const Sidebar = ({
   return (
     <aside id="kgpt-sidebar" className={`sidebar ${isOpen ? 'open' : ''}`}>
       <div className="sidebar-header">
-        <div className="sidebar-title">KrishnaGPT</div>
+        <div className="brand-lockup sidebar-brand-lockup">
+          <KGPTLogo className="brand-mark brand-mark-sidebar" />
+          <div className="sidebar-title">KrishnaGPT</div>
+        </div>
         <button className="sidebar-close" onClick={onClose} aria-label="Close sidebar">
           ×
         </button>

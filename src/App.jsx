@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import KGPTLogo from './components/KGPTLogo';
 import ChatPage from './pages/ChatPage';
 import LoginPage from './pages/LoginPage';
 import { subscribeToAuth } from './services/authService';
@@ -25,7 +26,10 @@ const ChatApp = () => {
   if (authLoading) {
     return (
       <div className="app-loading-screen">
-        <div className="app-loading-text">Loading KrishnaGPT...</div>
+        <div className="app-loading-brand">
+          <KGPTLogo className="brand-mark brand-mark-loading" />
+          <div className="app-loading-text">Loading KrishnaGPT...</div>
+        </div>
       </div>
     );
   }

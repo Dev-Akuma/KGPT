@@ -1,11 +1,12 @@
 import {
   createUserWithEmailAndPassword,
+  deleteUser,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
 } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { collection, deleteDoc, doc, getDocs, query, setDoc } from 'firebase/firestore';
 import { auth, db, googleProvider } from './firebase';
 
 export function toAuthErrorMessage(error) {
@@ -50,6 +51,10 @@ export function toAuthErrorMessage(error) {
 
   if (code === 'auth/account-exists-with-different-credential') {
     return 'An account already exists with a different sign-in method for this email.';
+  }
+
+  if (code === 'auth/requires-recent-login') {
+    return 'For security, please log in again before deleting your account.';
   }
 
   if (code) {
@@ -103,4 +108,37 @@ export async function registerWithEmail(email, password) {
 
 export function logout() {
   return signOut(auth);
+}
+
+async function deleteCollectionDocs(collectionRef) {
+  const snapshot = await getDocs(query(collectionRef));
+  if (snapshot.empty) {
+    return;
+  }
+
+  await Promise.all(snapshot.docs.map((entry) => deleteDoc(entry.ref)));
+}
+
+export async function deleteCurrentUserAccount() {
+  const user = auth.currentUser;
+
+  if (!user?.uid) {
+    throw new Error('No authenticated user found.');
+  }
+
+  const userId = user.uid;
+  const chatsCollectionRef = collection(db, 'users', userId, 'chats');
+  const chatsSnapshot = await getDocs(query(chatsCollectionRef));
+
+  for (const chatDoc of chatsSnapshot.docs) {
+    const messagesCollectionRef = collection(db, 'users', userId, 'chats', chatDoc.id, 'messages');
+    await deleteCollectionDocs(messagesCollectionRef);
+    await deleteDoc(chatDoc.ref);
+  }
+
+  const profileCollectionRef = collection(db, 'users', userId, 'profile');
+  await deleteCollectionDocs(profileCollectionRef);
+
+  await deleteDoc(doc(db, 'users', userId));
+  await deleteUser(user);
 }

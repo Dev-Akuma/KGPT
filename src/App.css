@@ -138,6 +138,30 @@
   justify-content: space-between;
 }
 
+.brand-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.brand-mark {
+  display: block;
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.sidebar-brand-lockup {
+  gap: 9px;
+}
+
+.brand-mark-sidebar {
+  width: 26px;
+  height: 26px;
+}
+
 .sidebar-title {
   font-size: 20px;
   font-weight: 700;
@@ -410,6 +434,15 @@
   letter-spacing: 0.4px;
   color: #f1f4ff;
   font-weight: 600;
+}
+
+.top-brand-lockup {
+  gap: 8px;
+}
+
+.brand-mark-top {
+  width: 22px;
+  height: 22px;
 }
 
 .menu-btn {
@@ -1104,6 +1137,17 @@
   color: #d7deea;
 }
 
+.app-loading-brand {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+}
+
+.brand-mark-loading {
+  width: 72px;
+  height: 72px;
+}
+
 .login-card {
   width: min(100%, 420px);
   border: 1px solid #2b2f39;
@@ -1111,6 +1155,16 @@
   background: linear-gradient(180deg, #1a1c22 0%, #131419 100%);
   padding: 28px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+}
+
+.login-brand-lockup {
+  justify-content: center;
+  gap: 12px;
+}
+
+.brand-mark-login {
+  width: 38px;
+  height: 38px;
 }
 
 .login-card h1 {
@@ -1348,6 +1402,17 @@
   border: 1px solid rgba(250, 128, 164, 0.45);
 }
 
+.utility-danger-section {
+  border-color: rgba(250, 128, 164, 0.45);
+  background: linear-gradient(180deg, rgba(95, 20, 46, 0.26) 0%, rgba(60, 16, 35, 0.2) 100%);
+}
+
+.utility-error-text {
+  margin: 8px 0 10px;
+  color: #ffd7e1;
+  font-size: 13px;
+}
+
 .chat-window::-webkit-scrollbar,
 .history-list::-webkit-scrollbar {
   width: 9px;
@@ -1501,6 +1566,11 @@
     font-size: 15px;
   }
 
+  .brand-mark-top {
+    width: 20px;
+    height: 20px;
+  }
+
   .chat-layout {
     padding: 0;
     gap: 0;
@@ -1590,6 +1660,11 @@
   .login-card {
     padding: 22px;
     border-radius: 18px;
+  }
+
+  .brand-mark-login {
+    width: 32px;
+    height: 32px;
   }
 
   .starter-grid {

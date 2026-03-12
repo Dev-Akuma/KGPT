@@ -1,7 +1,7 @@
 const PANEL_CONTENT = {
   settings: {
     title: 'Settings',
-    description: 'Preference controls are coming soon. You will be able to manage app behavior and defaults here.',
+    description: 'Manage app preferences and account controls.',
   },
   help: {
     title: 'Help',
@@ -13,11 +13,19 @@ const PANEL_CONTENT = {
   },
 };
 
-const UtilityPanel = ({ panelKey, onClose }) => {
+const UtilityPanel = ({
+  panelKey,
+  onClose,
+  onDeleteAccount,
+  deletingAccount = false,
+  deleteAccountError = '',
+}) => {
   const panel = PANEL_CONTENT[panelKey] || {
     title: 'Coming Soon',
     description: 'This section is under construction.',
   };
+
+  const isSettingsPanel = panelKey === 'settings';
 
   return (
     <div className="profile-panel-overlay" role="presentation" onClick={onClose}>
@@ -36,9 +44,34 @@ const UtilityPanel = ({ panelKey, onClose }) => {
         </div>
 
         <div className="profile-section">
-          <h3>Coming soon</h3>
+          <h3>{isSettingsPanel ? 'General' : 'Coming soon'}</h3>
           <p className="profile-empty">{panel.description}</p>
         </div>
+
+        {isSettingsPanel ? (
+          <div className="profile-section utility-danger-section">
+            <h3>Danger Zone</h3>
+            <p className="profile-empty">
+              Delete your account and permanently remove your chats, memory profile, and user record
+              from Firestore.
+            </p>
+
+            {deleteAccountError ? (
+              <p className="utility-error-text" role="alert">
+                {deleteAccountError}
+              </p>
+            ) : null}
+
+            <button
+              type="button"
+              className="profile-delete-btn"
+              onClick={onDeleteAccount}
+              disabled={deletingAccount}
+            >
+              {deletingAccount ? 'Deleting account...' : 'Delete account'}
+            </button>
+          </div>
+        ) : null}
       </aside>
     </div>
   );
