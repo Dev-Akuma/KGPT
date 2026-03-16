@@ -11,13 +11,16 @@ import {
   buildUserProfileContext,
   clearUserMemory,
   EMPTY_MEMORY,
-  extractInsightsFromMessage,
+  extractInsightsFromMessages,
   mergeUserMemory,
   removeMemoryItem,
   saveUserMemory,
   setMemoryLearningEnabled,
   subscribeToUserMemory,
 } from '../services/userMemoryService';
+
+const MEMORY_UPDATE_MESSAGE_THRESHOLD = 10;
+const MEMORY_UPDATE_MESSAGE_WINDOW = 10;
 
 function makeTitleFromMessage(message) {
   return message.trim().slice(0, 40) || 'New Chat';
@@ -35,10 +38,15 @@ export function useChatSessions(user) {
   const [memoryLoading, setMemoryLoading] = useState(true);
 
   const activeChatIdRef = useRef(activeChatId);
+  const pendingMemoryMessagesRef = useRef([]);
 
   useEffect(() => {
     activeChatIdRef.current = activeChatId;
   }, [activeChatId]);
+
+  useEffect(() => {
+    pendingMemoryMessagesRef.current = [];
+  }, [user?.uid]);
 
   useEffect(() => {
     if (!user?.uid) {
@@ -188,10 +196,23 @@ export function useChatSessions(user) {
 
         if (memory.memoryEnabled !== false) {
           try {
-            const extracted = await extractInsightsFromMessage(content);
-            latestMemory = mergeUserMemory(memory, extracted);
-            await saveUserMemory(user.uid, latestMemory);
-            setMemory(latestMemory);
+            pendingMemoryMessagesRef.current = [
+              ...pendingMemoryMessagesRef.current,
+              content,
+            ].slice(-MEMORY_UPDATE_MESSAGE_WINDOW);
+
+            if (pendingMemoryMessagesRef.current.length >= MEMORY_UPDATE_MESSAGE_THRESHOLD) {
+              const extracted = await extractInsightsFromMessages(
+                pendingMemoryMessagesRef.current,
+                memory,
+                MEMORY_UPDATE_MESSAGE_WINDOW,
+              );
+
+              latestMemory = mergeUserMemory(memory, extracted);
+              await saveUserMemory(user.uid, latestMemory);
+              setMemory(latestMemory);
+              pendingMemoryMessagesRef.current = [];
+            }
           } catch (memoryError) {
             setError(memoryError.message || 'Unable to update profile memory.');
           }
@@ -207,7 +228,7 @@ export function useChatSessions(user) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             input: content,
-            userProfileContext: buildUserProfileContext(latestMemory),
+            userProfileContext: buildUserProfileContext(latestMemory, content),
           }),
         });
 
