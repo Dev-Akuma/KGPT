@@ -188,6 +188,14 @@ const ChatPage = ({ user, onOpenLogin }) => {
     window.sessionStorage.setItem(DAILY_WISDOM_SESSION_DATE_KEY, today);
   }, []);
 
+  const markMoodCheckInComplete = useCallback(() => {
+    setShowMoodCheckIn(false);
+
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.setItem(MOOD_CHECKIN_SESSION_KEY, '1');
+    }
+  }, []);
+
   const handleSend = async () => {
     if (!input.trim()) {
       return;
@@ -195,6 +203,7 @@ const ChatPage = ({ user, onOpenLogin }) => {
 
     // Finish any in-progress assistant typing animation before sending the next prompt.
     setTypingCompleteToken((previous) => previous + 1);
+    markMoodCheckInComplete();
 
     const content = input;
     setInput('');
@@ -217,6 +226,7 @@ const ChatPage = ({ user, onOpenLogin }) => {
       }
 
       setTypingCompleteToken((previous) => previous + 1);
+      markMoodCheckInComplete();
 
       if (isAuthenticated) {
         await sendMessage(starter);
@@ -225,16 +235,8 @@ const ChatPage = ({ user, onOpenLogin }) => {
 
       await guestChat.sendMessage(starter);
     },
-    [guestChat, isAuthenticated, sendMessage, sending],
+    [guestChat, isAuthenticated, markMoodCheckInComplete, sendMessage, sending],
   );
-
-  const markMoodCheckInComplete = useCallback(() => {
-    setShowMoodCheckIn(false);
-
-    if (typeof window !== 'undefined') {
-      window.sessionStorage.setItem(MOOD_CHECKIN_SESSION_KEY, '1');
-    }
-  }, []);
 
   const handleMoodSelect = useCallback(
     async (messageText) => {
