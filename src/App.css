@@ -948,17 +948,6 @@
   color: #f3f6ff;
 }
 
-.input-breath-btn {
-  color: #f8f1da;
-  background: rgba(138, 119, 60, 0.26);
-  border-color: rgba(232, 203, 124, 0.42);
-}
-
-.input-breath-btn:hover:not(:disabled) {
-  background: rgba(168, 145, 78, 0.36);
-  border-color: rgba(245, 216, 138, 0.62);
-}
-
 .send-btn {
   border: 1px solid rgba(255, 247, 203, 0.42);
   background: linear-gradient(180deg, #f8df86 0%, #e5bb4f 100%);
@@ -1001,95 +990,6 @@
 .typing-label {
   color: #b8c0de;
   font-size: 13px;
-}
-
-.breathing-suggest-card {
-  width: min(100%, 760px);
-  border: 1px solid #556cd5;
-  border-radius: var(--radius-lg);
-  background: linear-gradient(180deg, rgba(37, 47, 103, 0.7) 0%, rgba(27, 35, 81, 0.7) 100%);
-  padding: 12px;
-  box-shadow: var(--panel-glow);
-}
-
-.breathing-suggest-card p {
-  margin: 0 0 10px;
-  color: #d6def9;
-}
-
-.breathing-suggest-card button {
-  border: 1px solid #4f62c8;
-  background: rgba(86, 105, 210, 0.28);
-  color: #edf1ff;
-  border-radius: 10px;
-  min-height: 40px;
-  padding: 8px 12px;
-  cursor: pointer;
-}
-
-.breathing-card {
-  width: min(100%, 760px);
-  border: 1px solid #5b72dc;
-  border-radius: var(--radius-lg);
-  background: linear-gradient(180deg, rgba(34, 44, 96, 0.88) 0%, rgba(24, 32, 74, 0.9) 100%);
-  padding: 14px;
-  box-shadow: var(--panel-glow);
-}
-
-.breathing-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.breathing-header h3 {
-  margin: 0;
-  font-size: 16px;
-  color: #edf1ff;
-}
-
-.breathing-stop-btn {
-  border: 1px solid #5569d0;
-  border-radius: 10px;
-  background: rgba(82, 100, 203, 0.24);
-  color: #edf1ff;
-  min-height: 36px;
-  padding: 6px 12px;
-  cursor: pointer;
-}
-
-.breathing-visual-wrap {
-  height: 150px;
-  display: grid;
-  place-items: center;
-}
-
-.breathing-circle {
-  width: 96px;
-  height: 96px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #b7c4ff 0%, #6f86f4 42%, #3e4da8 100%);
-  box-shadow: 0 0 0 12px rgba(110, 132, 244, 0.22), 0 14px 40px rgba(0, 0, 0, 0.4);
-  transition: transform 140ms linear;
-}
-
-.breathing-phase {
-  margin: 0;
-  text-align: center;
-  font-size: 18px;
-  color: #f1f4ff;
-}
-
-.breathing-meta {
-  margin: 8px 0 0;
-  text-align: center;
-  color: #b9c3e7;
-  font-size: 13px;
-}
-
-.empty-breathing-row {
-  margin-top: 14px;
 }
 
 .typing-dot {
@@ -1715,18 +1615,6 @@
     padding: 6px 2px;
   }
 
-  .breathing-card,
-  .breathing-suggest-card {
-    width: 100%;
-  }
-
-  .breathing-header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .breathing-stop-btn,
-  .breathing-suggest-card button,
   .input-icon-btn {
     min-height: 44px;
   }

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-const ChatInput = ({ value, onChange, onSend, loading, onBreathingRequest }) => {
+const ChatInput = ({ value, onChange, onSend, loading }) => {
   const textareaRef = useRef(null);
 
   useEffect(() => {
@@ -61,34 +61,6 @@ const ChatInput = ({ value, onChange, onSend, loading, onBreathingRequest }) => 
         </div>
 
         <div className="input-actions">
-          {onBreathingRequest ? (
-            <button
-              type="button"
-              className="input-icon-btn input-breath-btn"
-              onClick={onBreathingRequest}
-              disabled={loading}
-              aria-label="Start calm breathing"
-              title="Calm Breath"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path
-                  d="M12 4C9 7 7.5 9.8 7.5 12.1C7.5 14.6 9.5 16.5 12 16.5C14.5 16.5 16.5 14.6 16.5 12.1C16.5 9.8 15 7 12 4Z"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M4 15.5C5.3 14.4 6.8 14 8.2 14.4M20 15.5C18.7 14.4 17.2 14 15.8 14.4"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-          ) : null}
-
           <button
             type="button"
             className="input-icon-btn input-mic-btn"

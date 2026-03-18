@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 const SECTION_CONFIG = [
   { key: 'traits', label: 'Personality Traits' },
@@ -17,16 +17,10 @@ const UserProfilePanel = ({
   memoryLoading,
   onAddItem,
   onRemoveItem,
-  onUpdateCommunicationStyle,
   onToggleMemoryLearning,
   onClearMemory,
 }) => {
   const [draftBySection, setDraftBySection] = useState({});
-  const [styleDraft, setStyleDraft] = useState(memory?.communication_style || '');
-
-  useEffect(() => {
-    setStyleDraft(memory?.communication_style || '');
-  }, [memory?.communication_style]);
 
   const sectionItems = useMemo(() => {
     return SECTION_CONFIG.map((section) => ({
@@ -67,23 +61,6 @@ const UserProfilePanel = ({
               />
               <span>Enable memory learning</span>
             </label>
-
-            <div className="profile-section">
-              <h3>Communication Style</h3>
-              <textarea
-                value={styleDraft}
-                onChange={(event) => setStyleDraft(event.target.value)}
-                placeholder="e.g. calm, concise, reflective"
-                className="profile-style-input"
-              />
-              <button
-                type="button"
-                className="profile-save-btn"
-                onClick={() => onUpdateCommunicationStyle(styleDraft)}
-              >
-                Save style
-              </button>
-            </div>
 
             {sectionItems.map((section) => (
               <div key={section.key} className="profile-section">

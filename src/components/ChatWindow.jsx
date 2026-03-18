@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import BreathingExerciseMessage from './BreathingExerciseMessage';
 import DailyWisdomCard from './DailyWisdomCard';
 import MessageBubble from './MessageBubble';
 import SessionGreetingCard from './SessionGreetingCard';
@@ -21,10 +20,6 @@ const ChatWindow = ({
 	forceCompleteToken = 0,
 	onStarterSelect,
 	starterDisabled = false,
-	showBreathingPrompt = false,
-	breathingActive = false,
-	onActivateBreathing,
-	onStopBreathing,
 	showDailyWisdom = false,
 	onDismissDailyWisdom,
 	sessionGreeting,
@@ -123,7 +118,7 @@ const ChatWindow = ({
 		});
 
 		return () => cancelAnimationFrame(rafId);
-	}, [messages, loading, typingTick, messagesLoading, showBreathingPrompt, breathingActive]);
+	}, [messages, loading, typingTick, messagesLoading]);
 
 	return (
 		<section ref={containerRef} className="chat-window" aria-live="polite">
@@ -158,22 +153,6 @@ const ChatWindow = ({
 						))}
 					</div>
 
-					{showBreathingPrompt ? (
-						<div className="message-row assistant empty-breathing-row">
-							<div className="breathing-suggest-card">
-								<p>It sounds heavy right now. Want to try a guided breathing round?</p>
-								<button type="button" onClick={onActivateBreathing}>
-									Start Breathing Exercise
-								</button>
-							</div>
-						</div>
-					) : null}
-
-					{breathingActive ? (
-						<div className="message-row assistant empty-breathing-row">
-							<BreathingExerciseMessage onStop={onStopBreathing} />
-						</div>
-					) : null}
 				</div>
 			) : (
 				<div className="message-list">
@@ -196,23 +175,6 @@ const ChatWindow = ({
 								<span className="typing-dot" />
 							</div>
 							<span className="typing-label">KrishnaGPT is reflecting...</span>
-						</div>
-					) : null}
-
-					{showBreathingPrompt ? (
-						<div className="message-row assistant">
-							<div className="breathing-suggest-card">
-								<p>It sounds heavy right now. Want to try a guided breathing round?</p>
-								<button type="button" onClick={onActivateBreathing}>
-									Start Breathing Exercise
-								</button>
-							</div>
-						</div>
-					) : null}
-
-					{breathingActive ? (
-						<div className="message-row assistant">
-							<BreathingExerciseMessage onStop={onStopBreathing} />
 						</div>
 					) : null}
 

@@ -16,8 +16,6 @@ const Sidebar = ({
   onLoginRequest,
   onOpenSettings,
   onOpenPersonalization,
-  onOpenUpgrade,
-  onOpenHelp,
   onDeleteConversation,
   onLogout,
 }) => {
@@ -175,12 +173,6 @@ const Sidebar = ({
               onClick={() => runMenuAction(onOpenPersonalization)}
             >
               Personalization
-            </button>
-            <button type="button" role="menuitem" onClick={() => runMenuAction(onOpenUpgrade)}>
-              Upgrade Plan
-            </button>
-            <button type="button" role="menuitem" onClick={() => runMenuAction(onOpenHelp)}>
-              Help
             </button>
             <button type="button" role="menuitem" onClick={() => runMenuAction(onLogout)}>
               Log Out

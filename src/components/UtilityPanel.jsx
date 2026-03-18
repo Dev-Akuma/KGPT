@@ -3,14 +3,6 @@ const PANEL_CONTENT = {
     title: 'Settings',
     description: 'Manage app preferences and account controls.',
   },
-  help: {
-    title: 'Help',
-    description: 'Help resources and quick troubleshooting guides are coming soon.',
-  },
-  upgrade: {
-    title: 'Upgrade Plan',
-    description: 'Premium plan options will be available here soon. This is a placeholder for now.',
-  },
 };
 
 const UtilityPanel = ({

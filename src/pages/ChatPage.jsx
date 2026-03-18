@@ -13,12 +13,9 @@ import { useGroqChat } from '../useGroqChat';
 
 const DESKTOP_BREAKPOINT = 1024;
 const MOOD_CHECKIN_SESSION_KEY = 'kgpt:mood-checkin-shown';
-const BREATHING_SUGGESTION_SESSION_KEY = 'kgpt:breathing-suggestion-shown';
 const DAILY_WISDOM_LAST_DATE_KEY = 'kgpt:daily-wisdom-last-date';
 const DAILY_WISDOM_SESSION_DATE_KEY = 'kgpt:daily-wisdom-session-date';
 const SESSION_GREETING_KEY = 'kgpt:session-greeting-shown';
-const STRESS_SIGNAL_PATTERN =
-  /stress|stressed|anxious|anxiety|panic|overwhelm|overwhelmed|frustrated|sad|heavy|burnout|drained|tired/i;
 
 function getTodayKey() {
   const now = new Date();
@@ -108,7 +105,6 @@ const ChatPage = ({ user, onOpenLogin }) => {
     sendMessage,
     addManualMemoryItem,
     removeMemoryItem,
-    updateCommunicationStyle,
     clearMemory,
     toggleMemoryLearning,
   } = useChatSessions(user);
@@ -120,8 +116,6 @@ const ChatPage = ({ user, onOpenLogin }) => {
   const [showMoodCheckIn, setShowMoodCheckIn] = useState(false);
   const [showDailyWisdom, setShowDailyWisdom] = useState(false);
   const [sessionGreeting, setSessionGreeting] = useState(null);
-  const [showBreathingPrompt, setShowBreathingPrompt] = useState(false);
-  const [isBreathingActive, setIsBreathingActive] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [deleteAccountError, setDeleteAccountError] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(() =>
@@ -265,28 +259,6 @@ const ChatPage = ({ user, onOpenLogin }) => {
   const currentMessagesLoading = isAuthenticated ? messagesLoading : false;
   const currentError = isAuthenticated ? error : '';
 
-  useEffect(() => {
-    if (typeof window === 'undefined' || isBreathingActive || currentMessages.length === 0) {
-      return;
-    }
-
-    const alreadySuggested =
-      window.sessionStorage.getItem(BREATHING_SUGGESTION_SESSION_KEY) === '1';
-
-    if (alreadySuggested) {
-      return;
-    }
-
-    const lastUserMessage = [...currentMessages]
-      .reverse()
-      .find((message) => message.role === 'user' && typeof message.content === 'string');
-
-    if (lastUserMessage && STRESS_SIGNAL_PATTERN.test(lastUserMessage.content)) {
-      setShowBreathingPrompt(true);
-      window.sessionStorage.setItem(BREATHING_SUGGESTION_SESSION_KEY, '1');
-    }
-  }, [currentMessages, isBreathingActive]);
-
   const handleNewChat = useCallback(async () => {
     if (isAuthenticated) {
       await createNewChat();
@@ -311,15 +283,6 @@ const ChatPage = ({ user, onOpenLogin }) => {
     },
     [isDesktopViewport, selectChat],
   );
-
-  const handleActivateBreathing = useCallback(() => {
-    setShowBreathingPrompt(false);
-    setIsBreathingActive(true);
-  }, []);
-
-  const handleStopBreathing = useCallback(() => {
-    setIsBreathingActive(false);
-  }, []);
 
   const handleDismissDailyWisdom = useCallback(() => {
     setShowDailyWisdom(false);
@@ -411,8 +374,6 @@ const ChatPage = ({ user, onOpenLogin }) => {
         onLoginRequest={onOpenLogin}
         onOpenSettings={() => openUtilityPanel('settings')}
         onOpenPersonalization={() => openUtilityPanel('personalization')}
-        onOpenUpgrade={() => openUtilityPanel('upgrade')}
-        onOpenHelp={() => openUtilityPanel('help')}
         onLogout={logout}
       />
 
@@ -464,10 +425,6 @@ const ChatPage = ({ user, onOpenLogin }) => {
             forceCompleteToken={typingCompleteToken}
             onStarterSelect={handleStarterSelect}
             starterDisabled={isLoading}
-            showBreathingPrompt={showBreathingPrompt}
-            breathingActive={isBreathingActive}
-            onActivateBreathing={handleActivateBreathing}
-            onStopBreathing={handleStopBreathing}
             showDailyWisdom={showDailyWisdom}
             onDismissDailyWisdom={handleDismissDailyWisdom}
             sessionGreeting={currentMessages.length === 0 ? sessionGreeting : null}
@@ -480,7 +437,6 @@ const ChatPage = ({ user, onOpenLogin }) => {
             onChange={setInput}
             onSend={handleSend}
             loading={isLoading}
-            onBreathingRequest={handleActivateBreathing}
           />
         </div>
       </main>
@@ -494,7 +450,6 @@ const ChatPage = ({ user, onOpenLogin }) => {
           memoryLoading={memoryLoading}
           onAddItem={addManualMemoryItem}
           onRemoveItem={removeMemoryItem}
-          onUpdateCommunicationStyle={updateCommunicationStyle}
           onToggleMemoryLearning={toggleMemoryLearning}
           onClearMemory={clearMemory}
         />

@@ -12,7 +12,6 @@ KGPT is a Krishna-inspired AI guidance chat application focused on calm, reflect
   - Daily wisdom reflection card.
   - Personalized session greeting.
   - Guided conversation starters.
-  - Optional breathing exercise module.
 - Includes assistant typing animation and polished sidebar/profile interactions.
 
 ## Core Experience
@@ -44,17 +43,6 @@ KGPT is a Krishna-inspired AI guidance chat application focused on calm, reflect
 - Daily wisdom quote card shown once per day.
 - Personalized session greeting generated from memory insights.
 - Generic greeting fallback when no memory is available.
-
-### Breathing Exercise Module
-
-- Manual trigger button in composer (`Calm Breath`).
-- Optional stress-aware suggestion card in chat.
-- Guided breathing phases:
-  - Inhale 4s.
-  - Hold 4s.
-  - Exhale 6s.
-- Animated breathing circle with smooth looping.
-- Stop button to end the exercise.
 
 ### Sidebar and Conversation Management
 
@@ -101,7 +89,6 @@ KGPT/
   public/
   src/
     components/
-      BreathingExerciseMessage.jsx
       CalmBackground.jsx
       ChatInput.jsx
       ChatWindow.jsx
@@ -268,7 +255,6 @@ Memory doc includes:
 The app uses browser storage to control one-time UX modules.
 
 - `sessionStorage['kgpt:mood-checkin-shown']`
-- `sessionStorage['kgpt:breathing-suggestion-shown']`
 - `sessionStorage['kgpt:daily-wisdom-session-date']`
 - `sessionStorage['kgpt:session-greeting-shown']`
 - `localStorage['kgpt:daily-wisdom-last-date']`
