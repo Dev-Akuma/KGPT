@@ -1,4 +1,4 @@
-import logoUrl from '../assets/1_svg.svg';
+import logoUrl from '../assets/kgpt-icons/android-chrome-192x192.png';
 
 const KGPTLogo = ({ className = '', alt = 'KrishnaGPT logo' }) => {
   const classes = ['kgpt-logo', className].filter(Boolean).join(' ');
@@ -7,3 +7,4 @@ const KGPTLogo = ({ className = '', alt = 'KrishnaGPT logo' }) => {
 };
 
 export default KGPTLogo;
+
