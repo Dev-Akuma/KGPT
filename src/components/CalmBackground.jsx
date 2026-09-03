@@ -5,6 +5,7 @@ const CalmBackground = () => {
       <div className="calm-orb calm-orb-violet" />
       <div className="calm-orb calm-orb-gold" />
       <div className="calm-stars" />
+      <div className="awakening-glow" />
     </div>
   );
 };

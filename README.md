@@ -67,7 +67,7 @@ KGPT is a Krishna-inspired AI guidance chat application focused on calm, reflect
 
 - Frontend: React 19 + Vite
 - Backend: Vercel Serverless Functions (`/api/*`)
-- AI: `ai` SDK + `@ai-sdk/groq` (`llama-3.3-70b-versatile`)
+- AI: `@ai-sdk/mistral` (Model Mesh: `ministral-3b`, `mistral-small`, `codestral`)
 - Auth + Database: Firebase Authentication + Firestore
 - Deployment: Vercel
 
@@ -109,7 +109,7 @@ KGPT/
       chatService.js
       firebase.js
       userMemoryService.js
-    useGroqChat.js
+    useGuestChat.js
 ```
 
 ## Environment Variables
@@ -118,7 +118,7 @@ Create a `.env` file in the project root.
 
 ```env
 # AI backend
-GROQ_API_KEY=your_groq_api_key_here
+MISTRAL_API_KEY=your_mistral_api_key_here
 
 # Firebase client config
 VITE_FIREBASE_API_KEY=...
@@ -131,7 +131,7 @@ VITE_FIREBASE_APP_ID=...
 
 Notes:
 
-- `GROQ_API_KEY` is required by `api/chat.js` and `api/memory/extract.js`.
+- `MISTRAL_API_KEY` is required by `api/chat.js` and `api/memory/extract.js`.
 - Only `VITE_*` variables are exposed to frontend code.
 - Firebase values must belong to the same Firebase project.
 
@@ -264,7 +264,7 @@ The app uses browser storage to control one-time UX modules.
 1. Push repository to GitHub.
 2. Import project in Vercel.
 3. Add environment variables:
-  - `GROQ_API_KEY`
+  - `MISTRAL_API_KEY`
   - all required `VITE_FIREBASE_*` values
 4. Deploy.
 
@@ -278,8 +278,8 @@ Expected production API routes:
 - `404` for `/api/chat` or `/api/memory/extract` in production.
 - Ensure `api/chat.js` and `api/memory/extract.js` exist at repo root and redeploy.
 
-- `Missing GROQ_API_KEY`.
-- Add `GROQ_API_KEY` in Vercel project env vars and redeploy.
+- `Missing MISTRAL_API_KEY`.
+- Add `MISTRAL_API_KEY` in Vercel project env vars and redeploy.
 
 - Firebase auth/provider errors (`configuration-not-found`, `operation-not-allowed`, `unauthorized-domain`).
 - Verify Firebase project config, enabled providers, and authorized domains.

@@ -23,6 +23,7 @@ const ChatWindow = ({
 	showDailyWisdom = false,
 	onDismissDailyWisdom,
 	sessionGreeting,
+	userName,
 }) => {
 	const containerRef = useRef(null);
 	const endRef = useRef(null);
@@ -132,19 +133,17 @@ const ChatWindow = ({
 				</div>
 			) : messages.length === 0 ? (
 				<div className="empty-state">
-					<h1>What would you like help with today?</h1>
-					<p>
-						Share what feels heavy or unclear, and KrishnaGPT will offer calm, reflective
-						guidance inspired by timeless wisdom.
-					</p>
+					<h1>
+						{userName ? `How do you feel today, ${userName}?` : 'How do you feel today?'}
+					</h1>
 
-					<div className="starter-grid" role="list" aria-label="Conversation starters">
+					<div className="starter-chips" role="list" aria-label="Conversation starters">
 						{STARTER_PROMPTS.map((starter) => (
 							<button
 								key={starter}
 								type="button"
 								role="listitem"
-								className="starter-btn"
+								className="starter-chip"
 								onClick={() => onStarterSelect?.(starter)}
 								disabled={starterDisabled}
 							>
@@ -152,7 +151,6 @@ const ChatWindow = ({
 							</button>
 						))}
 					</div>
-
 				</div>
 			) : (
 				<div className="message-list">

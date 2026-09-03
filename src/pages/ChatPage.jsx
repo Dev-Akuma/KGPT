@@ -5,15 +5,13 @@ import ChatWindow from '../components/ChatWindow';
 import CalmBackground from '../components/CalmBackground';
 import UserProfilePanel from '../components/UserProfilePanel';
 import UtilityPanel from '../components/UtilityPanel';
-import MoodCheckInTrigger from '../components/MoodCheckInTrigger';
-import MoodCheckInPanel from '../components/MoodCheckInPanel';
+
 import KGPTLogo from '../components/KGPTLogo';
 import { useChatSessions } from '../hooks/useChatSessions';
 import { deleteCurrentUserAccount, logout, toAuthErrorMessage } from '../services/authService';
-import { useGroqChat } from '../useGroqChat';
+import { useGuestChat } from '../hooks/useGuestChat';
 
 const DESKTOP_BREAKPOINT = 1024;
-const MOOD_CHECKIN_SESSION_KEY = 'kgpt:mood-checkin-shown';
 const DAILY_WISDOM_LAST_DATE_KEY = 'kgpt:daily-wisdom-last-date';
 const DAILY_WISDOM_SESSION_DATE_KEY = 'kgpt:daily-wisdom-session-date';
 const SESSION_GREETING_KEY = 'kgpt:session-greeting-shown';
@@ -26,7 +24,7 @@ function getTodayKey() {
   return `${year}-${month}-${day}`;
 }
 
-import { useMoodHistory } from '../hooks/useMoodHistory';
+
 
 function toDisplayName(user) {
   const displayName = `${user?.displayName || ''}`.trim();
@@ -111,12 +109,11 @@ const ChatPage = ({ user, onOpenLogin }) => {
     clearMemory,
     toggleMemoryLearning,
   } = useChatSessions(user);
-  const guestChat = useGroqChat();
+  const guestChat = useGuestChat();
 
   const [input, setInput] = useState('');
   const [activeUtilityPanel, setActiveUtilityPanel] = useState(null);
   const [typingCompleteToken, setTypingCompleteToken] = useState(0);
-  const [isMoodPanelOpen, setMoodPanelOpen] = useState(false);
   const [showDailyWisdom, setShowDailyWisdom] = useState(false);
   const [sessionGreeting, setSessionGreeting] = useState(null);
   const [deletingAccount, setDeletingAccount] = useState(false);
@@ -181,9 +178,6 @@ const ChatPage = ({ user, onOpenLogin }) => {
     window.localStorage.setItem(DAILY_WISDOM_LAST_DATE_KEY, today);
     window.sessionStorage.setItem(DAILY_WISDOM_SESSION_DATE_KEY, today);
   }, []);
-
-  const { todayMood } = useMoodHistory();
-  const hasCheckedInToday = Boolean(todayMood);
 
   const handleSend = async () => {
     if (!input.trim()) {
@@ -334,6 +328,7 @@ const ChatPage = ({ user, onOpenLogin }) => {
 
       <Sidebar
         isOpen={isSidebarOpen}
+        onToggleSidebar={toggleSidebar}
         onClose={closeSidebar}
         conversations={currentChats}
         chatsLoading={currentChatsLoading}
@@ -380,11 +375,6 @@ const ChatPage = ({ user, onOpenLogin }) => {
             <KGPTLogo className="brand-mark brand-mark-top" />
             <div className="top-title">KrishnaGPT</div>
           </div>
-          
-          <MoodCheckInTrigger 
-            hasCheckedInToday={hasCheckedInToday} 
-            onClick={() => setMoodPanelOpen(true)} 
-          />
         </div>
 
         {!isAuthenticated ? (
@@ -395,7 +385,7 @@ const ChatPage = ({ user, onOpenLogin }) => {
 
         {currentError ? <div className="chat-error-banner">{currentError}</div> : null}
 
-        <div className="chat-layout">
+        <div className={`chat-layout ${currentMessages.length === 0 ? 'is-empty' : ''}`}>
           <ChatWindow
             messages={currentMessages}
             loading={isLoading}
@@ -407,6 +397,7 @@ const ChatPage = ({ user, onOpenLogin }) => {
             showDailyWisdom={showDailyWisdom}
             onDismissDailyWisdom={handleDismissDailyWisdom}
             sessionGreeting={currentMessages.length === 0 ? sessionGreeting : null}
+            userName={toDisplayName(user)}
           />
           <ChatInput
             value={input}
@@ -440,11 +431,6 @@ const ChatPage = ({ user, onOpenLogin }) => {
           deleteAccountError={deleteAccountError}
         />
       ) : null}
-
-      <MoodCheckInPanel 
-        isOpen={isMoodPanelOpen} 
-        onClose={() => setMoodPanelOpen(false)}
-      />
     </div>
   );
 };

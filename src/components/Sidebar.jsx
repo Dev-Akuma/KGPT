@@ -3,6 +3,7 @@ import KGPTLogo from './KGPTLogo';
 
 const Sidebar = ({
   isOpen,
+  onToggleSidebar,
   onClose,
   conversations,
   chatsLoading,
@@ -75,19 +76,31 @@ const Sidebar = ({
   };
 
   return (
-    <aside id="kgpt-sidebar" className={`sidebar ${isOpen ? 'open' : ''}`}>
+    <aside id="kgpt-sidebar" className={`sidebar ${isOpen ? 'open' : 'collapsed'}`}>
       <div className="sidebar-header">
-        <div className="brand-lockup sidebar-brand-lockup">
-          <KGPTLogo className="brand-mark brand-mark-sidebar" />
-          <div className="sidebar-title">KrishnaGPT</div>
-        </div>
+        <button className="sidebar-toggle-btn" onClick={onToggleSidebar} aria-label="Toggle sidebar">
+          {isOpen ? (
+            <KGPTLogo className="brand-mark brand-mark-sidebar" />
+          ) : (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          )}
+        </button>
+        <div className="sidebar-title">KrishnaGPT</div>
         <button className="sidebar-close" onClick={onClose} aria-label="Close sidebar">
           ×
         </button>
       </div>
 
-      <button className="new-chat-btn" type="button" onClick={onNewChat}>
-        + New Chat
+      <button className="new-chat-btn" type="button" onClick={onNewChat} title="New Chat">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="new-chat-icon">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        <span className="btn-text">New Chat</span>
       </button>
 
       <div className="history-list" role="list" aria-label="Chat history">
@@ -162,11 +175,23 @@ const Sidebar = ({
           </div>
         </button>
 
+        {isAuthenticated ? (
+          <button 
+            className="sidebar-settings-btn" 
+            type="button" 
+            onClick={() => runMenuAction(onOpenSettings)}
+            aria-label="Settings"
+            title="Settings"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+          </button>
+        ) : null}
+
         {isAuthenticated && isMenuOpen ? (
           <div className="profile-dropdown" role="menu" aria-label="Profile menu">
-            <button type="button" role="menuitem" onClick={() => runMenuAction(onOpenSettings)}>
-              Settings
-            </button>
             <button
               type="button"
               role="menuitem"

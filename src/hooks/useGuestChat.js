@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export function useGroqChat() {
+export function useGuestChat() {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
 
