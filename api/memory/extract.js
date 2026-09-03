@@ -1,4 +1,8 @@
-import { groq } from '@ai-sdk/groq';
+import { createMistral } from '@ai-sdk/mistral';
+
+const mistral = createMistral({
+  apiKey: process.env.MISTRAL_API_KEY,
+});
 import { generateText } from 'ai';
 
 const MEMORY_EXTRACTION_PROMPT = `System Prompt: The Memory Architect
@@ -83,8 +87,8 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  if (!process.env.GROQ_API_KEY) {
-    return res.status(500).json({ error: 'Missing GROQ_API_KEY' });
+  if (!process.env.MISTRAL_API_KEY) {
+    return res.status(500).json({ error: 'Missing MISTRAL_API_KEY' });
   }
 
   const { messages, message, userProfile, messageLimit = 10 } = normalizeBody(req);
@@ -112,7 +116,7 @@ export default async function handler(req, res) {
     ].join('\n');
 
     const { text } = await generateText({
-      model: groq('llama-3.3-70b-versatile'),
+      model: mistral('codestral-latest'),
       system: MEMORY_EXTRACTION_PROMPT,
       prompt,
     });

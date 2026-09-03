@@ -1764,3 +1764,274 @@
 
 }
 
+/* --- Mood Check-In UX Update --- */
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mood-trigger-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 6px 12px;
+  color: #f3f4f6;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  margin-left: auto;
+}
+
+.mood-trigger-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.mood-trigger-btn.checked-in {
+  color: #a7f3d0;
+  border-color: rgba(167, 243, 208, 0.2);
+}
+
+.mood-trigger-icon {
+  font-size: 1rem;
+}
+
+@media (max-width: 600px) {
+  .mood-trigger-text {
+    display: none;
+  }
+  .mood-trigger-btn {
+    padding: 6px;
+    border-radius: 50%;
+  }
+}
+
+.mood-panel-overlay {
+  z-index: 1000;
+}
+
+.mood-panel {
+  max-width: 450px;
+  padding: 1.5rem;
+  background: #1a1b26;
+  border-left: 1px solid rgba(255,255,255,0.1);
+  overflow-y: auto;
+}
+
+@media (max-width: 1024px) {
+  .mood-panel {
+    border-left: none;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+}
+
+.mood-panel-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.today-mood-checkin h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.25rem;
+  color: #e5e7eb;
+}
+
+.today-mood-checkin p {
+  font-size: 0.9rem;
+  color: #9ca3af;
+  margin: 0 0 1rem 0;
+}
+
+.mood-checkin-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mood-checkin-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #f3f4f6;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.mood-checkin-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.mood-checkin-btn.selected {
+  background: rgba(167, 243, 208, 0.15);
+  border-color: #a7f3d0;
+  color: #a7f3d0;
+}
+
+.mood-streak-summary {
+  background: rgba(255,255,255,0.03);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.streak-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.streak-icon {
+  font-size: 2rem;
+}
+
+.streak-text strong {
+  display: block;
+  font-size: 1.1rem;
+  color: #f3f4f6;
+}
+
+.streak-subtext {
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+.streak-stats {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-value {
+  font-weight: bold;
+  color: #e5e7eb;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.mood-calendar {
+  background: rgba(255,255,255,0.02);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.calendar-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.calendar-header button {
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 1.2rem;
+}
+
+.calendar-header button:hover:not(:disabled) {
+  color: #f3f4f6;
+}
+
+.calendar-header button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  text-align: center;
+}
+
+.calendar-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+}
+
+.header-cell {
+  color: #9ca3af;
+  font-weight: bold;
+  font-size: 0.75rem;
+}
+
+.day-cell {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  color: #d1d5db;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.day-cell:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+.day-cell.is-today {
+  border-color: rgba(255,255,255,0.3);
+  font-weight: bold;
+}
+
+.day-cell.has-checkin {
+  background: rgba(255,255,255,0.1);
+}
+
+.day-cell.is-selected {
+  border-color: #a7f3d0;
+  box-shadow: 0 0 0 1px #a7f3d0;
+}
+
+.calendar-day-details {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  text-align: center;
+}
+
+.calendar-day-details.empty {
+  color: #9ca3af;
+}
+
+.calendar-day-details strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: #e5e7eb;
+}
+
+.calendar-day-details p {
+  margin: 0;
+  font-size: 0.9rem;
+}

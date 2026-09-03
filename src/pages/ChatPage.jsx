@@ -5,7 +5,8 @@ import ChatWindow from '../components/ChatWindow';
 import CalmBackground from '../components/CalmBackground';
 import UserProfilePanel from '../components/UserProfilePanel';
 import UtilityPanel from '../components/UtilityPanel';
-import MoodCheckInCard from '../components/MoodCheckInCard';
+import MoodCheckInTrigger from '../components/MoodCheckInTrigger';
+import MoodCheckInPanel from '../components/MoodCheckInPanel';
 import KGPTLogo from '../components/KGPTLogo';
 import { useChatSessions } from '../hooks/useChatSessions';
 import { deleteCurrentUserAccount, logout, toAuthErrorMessage } from '../services/authService';
@@ -24,6 +25,8 @@ function getTodayKey() {
   const day = String(now.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
+
+import { useMoodHistory } from '../hooks/useMoodHistory';
 
 function toDisplayName(user) {
   const displayName = `${user?.displayName || ''}`.trim();
@@ -113,7 +116,7 @@ const ChatPage = ({ user, onOpenLogin }) => {
   const [input, setInput] = useState('');
   const [activeUtilityPanel, setActiveUtilityPanel] = useState(null);
   const [typingCompleteToken, setTypingCompleteToken] = useState(0);
-  const [showMoodCheckIn, setShowMoodCheckIn] = useState(false);
+  const [isMoodPanelOpen, setMoodPanelOpen] = useState(false);
   const [showDailyWisdom, setShowDailyWisdom] = useState(false);
   const [sessionGreeting, setSessionGreeting] = useState(null);
   const [deletingAccount, setDeletingAccount] = useState(false);
@@ -165,9 +168,6 @@ const ChatPage = ({ user, onOpenLogin }) => {
       return;
     }
 
-    const hasShownMoodCheckIn = window.sessionStorage.getItem(MOOD_CHECKIN_SESSION_KEY) === '1';
-    setShowMoodCheckIn(!hasShownMoodCheckIn);
-
     const today = getTodayKey();
     const sessionDate = window.sessionStorage.getItem(DAILY_WISDOM_SESSION_DATE_KEY);
     const lastShownDate = window.localStorage.getItem(DAILY_WISDOM_LAST_DATE_KEY);
@@ -182,13 +182,8 @@ const ChatPage = ({ user, onOpenLogin }) => {
     window.sessionStorage.setItem(DAILY_WISDOM_SESSION_DATE_KEY, today);
   }, []);
 
-  const markMoodCheckInComplete = useCallback(() => {
-    setShowMoodCheckIn(false);
-
-    if (typeof window !== 'undefined') {
-      window.sessionStorage.setItem(MOOD_CHECKIN_SESSION_KEY, '1');
-    }
-  }, []);
+  const { todayMood } = useMoodHistory();
+  const hasCheckedInToday = Boolean(todayMood);
 
   const handleSend = async () => {
     if (!input.trim()) {
@@ -197,7 +192,6 @@ const ChatPage = ({ user, onOpenLogin }) => {
 
     // Finish any in-progress assistant typing animation before sending the next prompt.
     setTypingCompleteToken((previous) => previous + 1);
-    markMoodCheckInComplete();
 
     const content = input;
     setInput('');
@@ -220,7 +214,6 @@ const ChatPage = ({ user, onOpenLogin }) => {
       }
 
       setTypingCompleteToken((previous) => previous + 1);
-      markMoodCheckInComplete();
 
       if (isAuthenticated) {
         await sendMessage(starter);
@@ -229,26 +222,7 @@ const ChatPage = ({ user, onOpenLogin }) => {
 
       await guestChat.sendMessage(starter);
     },
-    [guestChat, isAuthenticated, markMoodCheckInComplete, sendMessage, sending],
-  );
-
-  const handleMoodSelect = useCallback(
-    async (messageText) => {
-      if (!messageText || sending || guestChat.loading) {
-        return;
-      }
-
-      markMoodCheckInComplete();
-      setTypingCompleteToken((previous) => previous + 1);
-
-      if (isAuthenticated) {
-        await sendMessage(messageText);
-        return;
-      }
-
-      await guestChat.sendMessage(messageText);
-    },
-    [guestChat, isAuthenticated, markMoodCheckInComplete, sendMessage, sending],
+    [guestChat, isAuthenticated, sendMessage, sending],
   );
 
   const isLoading = isAuthenticated ? sending : guestChat.loading;
@@ -406,6 +380,11 @@ const ChatPage = ({ user, onOpenLogin }) => {
             <KGPTLogo className="brand-mark brand-mark-top" />
             <div className="top-title">KrishnaGPT</div>
           </div>
+          
+          <MoodCheckInTrigger 
+            hasCheckedInToday={hasCheckedInToday} 
+            onClick={() => setMoodPanelOpen(true)} 
+          />
         </div>
 
         {!isAuthenticated ? (
@@ -429,9 +408,6 @@ const ChatPage = ({ user, onOpenLogin }) => {
             onDismissDailyWisdom={handleDismissDailyWisdom}
             sessionGreeting={currentMessages.length === 0 ? sessionGreeting : null}
           />
-          {showMoodCheckIn ? (
-            <MoodCheckInCard disabled={isLoading} onSelectMood={handleMoodSelect} />
-          ) : null}
           <ChatInput
             value={input}
             onChange={setInput}
@@ -464,6 +440,11 @@ const ChatPage = ({ user, onOpenLogin }) => {
           deleteAccountError={deleteAccountError}
         />
       ) : null}
+
+      <MoodCheckInPanel 
+        isOpen={isMoodPanelOpen} 
+        onClose={() => setMoodPanelOpen(false)}
+      />
     </div>
   );
 };

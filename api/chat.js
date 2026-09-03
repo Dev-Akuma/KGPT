@@ -1,5 +1,10 @@
-import { groq } from '@ai-sdk/groq';
-import { generateText } from 'ai';
+import { createMistral } from '@ai-sdk/mistral';
+import { generateText, generateObject } from 'ai';
+import { z } from 'zod';
+
+const mistral = createMistral({
+  apiKey: process.env.MISTRAL_API_KEY,
+});
 
 const KRISHNA_GPT_SYSTEM_PROMPT = `You are KrishnaGPT, a calm and compassionate guidance assistant inspired by the wisdom of Krishna from the Bhagavad Gita.
 
@@ -61,8 +66,8 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  if (!process.env.GROQ_API_KEY) {
-    return res.status(500).json({ error: 'Missing GROQ_API_KEY' });
+  if (!process.env.MISTRAL_API_KEY) {
+    return res.status(500).json({ error: 'Missing MISTRAL_API_KEY' });
   }
 
   const { input, userProfileContext } = normalizeBody(req);
@@ -72,17 +77,44 @@ export default async function handler(req, res) {
   }
 
   try {
+    // 1. Guardian Layer (Moderation & Routing)
+    const gatekeeperResult = await generateObject({
+      model: mistral('ministral-3b-latest'),
+      schema: z.object({
+        isSafe: z.boolean().describe('True if the user input is safe. False if it contains hate speech, severe toxicity, self-harm, or illegal content.'),
+        intent: z.enum(['DEEP_GUIDANCE', 'DAILY_REFLECTION', 'CASUAL_MANTRA']).describe('Classify the intent of the user message. Deep life crisis or philosophical questions are DEEP_GUIDANCE. Mentions of daily routines or journal entries are DAILY_REFLECTION. Greetings, quick chats, or asking for a mantra are CASUAL_MANTRA.')
+      }),
+      prompt: `Analyze the following user input and return the result strictly as a valid JSON object matching the requested schema. DO NOT return a JSON schema definition. Return only the raw data values (e.g. {"isSafe": true, "intent": "CASUAL_MANTRA"}).\n\nUser Input: "${input}"`,
+    });
+
+    if (!gatekeeperResult.object.isSafe) {
+      return res.status(200).json({ text: "I'm sorry, but I cannot provide guidance on that topic. May you find peace." });
+    }
+
+    const intent = gatekeeperResult.object.intent;
+    let selectedModel = 'ministral-8b-latest'; // Default (Fast)
+
+    if (intent === 'DEEP_GUIDANCE') {
+      selectedModel = 'mistral-large-latest'; // Wisdom (Deep)
+    } else if (intent === 'DAILY_REFLECTION') {
+      selectedModel = 'mistral-small-latest'; // Workhorse
+    }
+
+    const systemPrompt = userProfileContext
+      ? `${KRISHNA_GPT_SYSTEM_PROMPT}\n\nUser profile context:\n${userProfileContext}`
+      : KRISHNA_GPT_SYSTEM_PROMPT;
+
+    // 2. Wisdom Layer (Generation)
     const { text } = await generateText({
-      model: groq('llama-3.3-70b-versatile'),
-      system: userProfileContext
-        ? `${KRISHNA_GPT_SYSTEM_PROMPT}\n\nUser profile context:\n${userProfileContext}`
-        : KRISHNA_GPT_SYSTEM_PROMPT,
+      model: mistral(selectedModel),
+      system: systemPrompt,
       prompt: input,
     });
 
     return res.status(200).json({ text: text || 'No response text returned.' });
   } catch (error) {
+    console.error('Error in chat handler:', error);
     const message = error?.message || 'Unknown upstream error';
-    return res.status(500).json({ error: `Groq request failed: ${message}` });
+    return res.status(500).json({ error: `Request failed: ${message}` });
   }
 }
