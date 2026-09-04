@@ -78,21 +78,23 @@ const Sidebar = ({
   return (
     <aside id="kgpt-sidebar" className={`sidebar ${isOpen ? 'open' : 'collapsed'}`}>
       <div className="sidebar-header">
-        <button className="sidebar-toggle-btn" onClick={onToggleSidebar} aria-label="Toggle sidebar">
-          {isOpen ? (
-            <KGPTLogo className="brand-mark brand-mark-sidebar" />
-          ) : (
+        {isOpen ? (
+          <KGPTLogo className="brand-mark brand-mark-sidebar" />
+        ) : (
+          <button className="sidebar-toggle-btn" onClick={onToggleSidebar} aria-label="Toggle sidebar" style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer', padding: 0, display: 'flex' }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="3" y1="12" x2="21" y2="12"></line>
               <line x1="3" y1="6" x2="21" y2="6"></line>
               <line x1="3" y1="18" x2="21" y2="18"></line>
             </svg>
-          )}
-        </button>
-        <div className="sidebar-title">KrishnaGPT</div>
-        <button className="sidebar-close" onClick={onClose} aria-label="Close sidebar">
-          ×
-        </button>
+          </button>
+        )}
+        {isOpen && <div className="sidebar-title" style={{ flex: 1 }}>KrishnaGPT</div>}
+        {isOpen && (
+          <button className="sidebar-close" onClick={onClose} aria-label="Close sidebar" style={{ display: 'block', fontSize: '28px', lineHeight: 1 }}>
+            ×
+          </button>
+        )}
       </div>
 
       <button className="new-chat-btn" type="button" onClick={onNewChat} title="New Chat">

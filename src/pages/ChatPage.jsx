@@ -394,7 +394,7 @@ const ChatPage = ({ user, onOpenLogin }) => {
             forceCompleteToken={typingCompleteToken}
             onStarterSelect={handleStarterSelect}
             starterDisabled={isLoading}
-            showDailyWisdom={showDailyWisdom}
+            showDailyWisdom={isAuthenticated && showDailyWisdom}
             onDismissDailyWisdom={handleDismissDailyWisdom}
             sessionGreeting={currentMessages.length === 0 ? sessionGreeting : null}
             userName={toDisplayName(user)}

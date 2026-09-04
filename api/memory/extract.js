@@ -3,7 +3,8 @@ import { createMistral } from '@ai-sdk/mistral';
 const mistral = createMistral({
   apiKey: process.env.MISTRAL_API_KEY,
 });
-import { generateText } from 'ai';
+import { generateObject } from 'ai';
+import { z } from 'zod';
 
 const MEMORY_EXTRACTION_PROMPT = `System Prompt: The Memory Architect
 Role: You are the Subconscious Memory Manager for KrishnaGPT, a life-guide AI.
@@ -23,42 +24,40 @@ Constraints:
 - Merge redundant details.
 - Keep concise and grounded in explicit user evidence.
 - No diagnosis and no invented facts.
-- Return valid JSON only, no markdown fences.
+- No diagnosis and no invented facts.
+\`;
 
-Return schema:
-{
-  "core_essence": {
-    "name": string,
-    "age": string,
-    "core_values": string[],
-    "life_goals": string[],
-    "major_past_traumas": string[]
-  },
-  "ecosystem": [
-    {
-      "name": string,
-      "relation": string,
-      "sentiment": string,
-      "notes": string[]
-    }
-  ],
-  "shadow_work": {
-    "recurring_anxieties": string[],
-    "recurring_fears": string[],
-    "insecurities": string[],
-    "inferiority_triggers": string[]
-  },
-  "daily_routine": {
-    "current_projects": string[],
-    "daily_habits": string[],
-    "health_status": string[],
-    "current_focus": string[]
-  },
-  "ephemeral": {
-    "fragments": string[]
-  },
-  "communication_style": string
-}`;
+const profileSchema = z.object({
+  core_essence: z.object({
+    name: z.string().default(''),
+    age: z.string().default(''),
+    core_values: z.array(z.string()).default([]),
+    life_goals: z.array(z.string()).default([]),
+    major_past_traumas: z.array(z.string()).default([])
+  }).default({}),
+  ecosystem: z.array(z.object({
+    name: z.string().default(''),
+    relation: z.string().default(''),
+    sentiment: z.string().default(''),
+    notes: z.array(z.string()).default([])
+  })).default([]),
+  shadow_work: z.object({
+    recurring_anxieties: z.array(z.string()).default([]),
+    recurring_fears: z.array(z.string()).default([]),
+    insecurities: z.array(z.string()).default([]),
+    inferiority_triggers: z.array(z.string()).default([])
+  }).default({}),
+  daily_routine: z.object({
+    current_projects: z.array(z.string()).default([]),
+    daily_habits: z.array(z.string()).default([]),
+    health_status: z.array(z.string()).default([]),
+    current_focus: z.array(z.string()).default([])
+  }).default({}),
+  ephemeral: z.object({
+    fragments: z.array(z.string()).default([])
+  }).default({}),
+  communication_style: z.string().default('')
+});
 
 function normalizeBody(req) {
   if (req.body && typeof req.body === 'object') {
@@ -76,11 +75,7 @@ function normalizeBody(req) {
   return {};
 }
 
-function parseJsonResponse(text) {
-  const raw = (text || '').trim();
-  const normalized = raw.replace(/^```json\s*/i, '').replace(/```$/i, '').trim();
-  return JSON.parse(normalized || '{}');
-}
+
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -115,13 +110,14 @@ export default async function handler(req, res) {
       'Return the fully updated profile JSON only.',
     ].join('\n');
 
-    const { text } = await generateText({
-      model: mistral('codestral-latest'),
+    const { object } = await generateObject({
+      model: mistral('ministral-8b-2512'),
+      schema: profileSchema,
       system: MEMORY_EXTRACTION_PROMPT,
       prompt,
     });
 
-    const profile = parseJsonResponse(text);
+    const profile = object;
     return res.status(200).json({ profile });
   } catch (error) {
     const messageText = error?.message || 'Unknown upstream error';

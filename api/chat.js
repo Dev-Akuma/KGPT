@@ -77,31 +77,27 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 1. Guardian Layer (Moderation & Routing)
+    // 1. Guardian Layer (Routing)
     const gatekeeperResult = await generateObject({
-      model: mistral('ministral-3b-latest'),
+      model: mistral('ministral-3b-2512'),
       schema: z.object({
-        isSafe: z.boolean().describe('True if the user input is safe. False if it contains hate speech, severe toxicity, self-harm, or illegal content.'),
         intent: z.enum(['DEEP_GUIDANCE', 'DAILY_REFLECTION', 'CASUAL_MANTRA']).describe('Classify the intent of the user message. Deep life crisis or philosophical questions are DEEP_GUIDANCE. Mentions of daily routines or journal entries are DAILY_REFLECTION. Greetings, quick chats, or asking for a mantra are CASUAL_MANTRA.')
       }),
-      prompt: `Analyze the following user input and return the result strictly as a valid JSON object matching the requested schema. DO NOT return a JSON schema definition. Return only the raw data values (e.g. {"isSafe": true, "intent": "CASUAL_MANTRA"}).\n\nUser Input: "${input}"`,
+      prompt: `Analyze the following user input and return the result strictly as a valid JSON object matching the requested schema. DO NOT return a JSON schema definition. Return only the raw data values (e.g. {"intent": "CASUAL_MANTRA"}).\n\nUser Input: "${input}"`,
     });
 
-    if (!gatekeeperResult.object.isSafe) {
-      return res.status(200).json({ text: "I'm sorry, but I cannot provide guidance on that topic. May you find peace." });
-    }
-
     const intent = gatekeeperResult.object.intent;
-    let selectedModel = 'ministral-8b-latest'; // Default (Fast)
+    let selectedModel = 'ministral-8b-2512'; // Default (Fast)
 
     if (intent === 'DEEP_GUIDANCE') {
-      selectedModel = 'mistral-large-latest'; // Wisdom (Deep)
+      selectedModel = 'ministral-14b-2512'; // Highest capacity available model on this tier
     } else if (intent === 'DAILY_REFLECTION') {
-      selectedModel = 'mistral-small-latest'; // Workhorse
+      selectedModel = 'ministral-8b-2512'; // Workhorse
     }
 
-    const systemPrompt = userProfileContext
-      ? `${KRISHNA_GPT_SYSTEM_PROMPT}\n\nUser profile context:\n${userProfileContext}`
+    const trimmedContext = typeof userProfileContext === 'string' ? userProfileContext.trim() : '';
+    const systemPrompt = trimmedContext
+      ? `${KRISHNA_GPT_SYSTEM_PROMPT}\n\nUser profile context:\n${trimmedContext}`
       : KRISHNA_GPT_SYSTEM_PROMPT;
 
     // 2. Wisdom Layer (Generation)
