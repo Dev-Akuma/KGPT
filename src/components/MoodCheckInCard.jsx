@@ -10,7 +10,7 @@ const MoodCheckInCard = ({ disabled, onSelectMood }) => {
   return (
     <section className="mood-checkin-card" aria-label="Daily mood check-in">
       <h2>How are you feeling today?</h2>
-      <p>Choose a mood and KrishnaGPT will gently adapt the conversation.</p>
+      <p>Choose a mood and The Compass will gently adapt the conversation.</p>
 
       <div className="mood-checkin-options">
         {MOOD_OPTIONS.map((option) => (

@@ -172,7 +172,7 @@ const ChatWindow = ({
 								<span className="typing-dot" />
 								<span className="typing-dot" />
 							</div>
-							<span className="typing-label">KrishnaGPT is reflecting...</span>
+							<span className="typing-label">The Compass is reflecting...</span>
 						</div>
 					) : null}
 

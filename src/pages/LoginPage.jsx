@@ -101,7 +101,7 @@ const LoginPage = ({ onBackToGuest }) => {
         <div className={`login-panel login-panel--left${mobileTab !== 'signin' ? ' login-panel--mobile-hidden' : ''}`}>
           <div className="brand-lockup login-brand-lockup">
             <KGPTLogo className="brand-mark brand-mark-login" />
-            <h1>KrishnaGPT</h1>
+            <h1>The Compass</h1>
           </div>
           <h2 className="login-panel-title">Welcome back</h2>
           <p className="login-subtitle">Sign in to continue your journey.</p>
@@ -173,7 +173,7 @@ const LoginPage = ({ onBackToGuest }) => {
         {/* ── Right panel: Sign Up ── */}
         <div className={`login-panel login-panel--right${mobileTab !== 'signup' ? ' login-panel--mobile-hidden' : ''}`}>
           <h2 className="login-panel-title login-panel-title--top">Create account</h2>
-          <p className="login-subtitle">Start your free journey with Krishna.</p>
+          <p className="login-subtitle">Start your free journey with The Compass.</p>
 
           <form onSubmit={handleSignUp} className="login-form">
             <label htmlFor="signup-email">Email</label>

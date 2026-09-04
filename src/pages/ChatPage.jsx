@@ -373,7 +373,7 @@ const ChatPage = ({ user, onOpenLogin }) => {
           </button>
           <div className="brand-lockup top-brand-lockup">
             <KGPTLogo className="brand-mark brand-mark-top" />
-            <div className="top-title">KrishnaGPT</div>
+            <div className="top-title">The Compass</div>
           </div>
         </div>
 

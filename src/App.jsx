@@ -28,7 +28,7 @@ const ChatApp = () => {
       <div className="app-loading-screen">
         <div className="app-loading-brand">
           <KGPTLogo className="brand-mark brand-mark-loading" />
-          <div className="app-loading-text">Loading KrishnaGPT...</div>
+          <div className="app-loading-text">Loading The Compass...</div>
         </div>
       </div>
     );

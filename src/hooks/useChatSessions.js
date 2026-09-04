@@ -18,8 +18,17 @@ import {
   setMemoryLearningEnabled,
   subscribeToUserMemory,
 } from '../services/userMemoryService';
+import {
+  buildSemanticContext,
+  deleteMemoryEntry,
+  embedUserMessage,
+  getPinnedMemories,
+  processAndStoreMemories,
+  searchMemories,
+  subscribeToMemories,
+} from '../services/memoryStoreService';
 
-const MEMORY_UPDATE_MESSAGE_THRESHOLD = 10;
+const MEMORY_UPDATE_MESSAGE_THRESHOLD = 3; // Lower threshold — delta extraction is cheap
 const MEMORY_UPDATE_MESSAGE_WINDOW = 10;
 
 function makeTitleFromMessage(message) {
@@ -36,6 +45,8 @@ export function useChatSessions(user) {
   const [error, setError] = useState('');
   const [memory, setMemory] = useState(EMPTY_MEMORY);
   const [memoryLoading, setMemoryLoading] = useState(true);
+  const [semanticMemories, setSemanticMemories] = useState([]);
+  const [semanticMemoriesLoading, setSemanticMemoriesLoading] = useState(true);
 
   const activeChatIdRef = useRef(activeChatId);
   const pendingMemoryMessagesRef = useRef([]);
@@ -103,6 +114,31 @@ export function useChatSessions(user) {
       (snapshotError) => {
         setError(snapshotError.message || 'Failed to load profile memory.');
         setMemoryLoading(false);
+      },
+    );
+
+    return unsubscribe;
+  }, [user]);
+
+  // Subscribe to semantic memories
+  useEffect(() => {
+    if (!user?.uid) {
+      setSemanticMemories([]);
+      setSemanticMemoriesLoading(false);
+      return;
+    }
+
+    setSemanticMemoriesLoading(true);
+
+    const unsubscribe = subscribeToMemories(
+      user.uid,
+      (nextMemories) => {
+        setSemanticMemories(nextMemories);
+        setSemanticMemoriesLoading(false);
+      },
+      (snapshotError) => {
+        setError(snapshotError.message || 'Failed to load semantic memories.');
+        setSemanticMemoriesLoading(false);
       },
     );
 
@@ -202,15 +238,17 @@ export function useChatSessions(user) {
             ].slice(-MEMORY_UPDATE_MESSAGE_WINDOW);
 
             if (pendingMemoryMessagesRef.current.length >= MEMORY_UPDATE_MESSAGE_THRESHOLD) {
-              const extracted = await extractInsightsFromMessages(
-                pendingMemoryMessagesRef.current,
-                memory,
-                MEMORY_UPDATE_MESSAGE_WINDOW,
-              );
+              // Semantic memory: extract delta facts, embed, and store
+              try {
+                await processAndStoreMemories(
+                  user.uid,
+                  pendingMemoryMessagesRef.current,
+                  semanticMemories,
+                );
+              } catch (semanticError) {
+                console.warn('Semantic memory update failed (non-blocking):', semanticError.message);
+              }
 
-              latestMemory = mergeUserMemory(memory, extracted);
-              await saveUserMemory(user.uid, latestMemory);
-              setMemory(latestMemory);
               pendingMemoryMessagesRef.current = [];
             }
           } catch (memoryError) {
@@ -223,12 +261,34 @@ export function useChatSessions(user) {
           await updateChatTitle(user.uid, chatId, makeTitleFromMessage(content));
         }
 
+        // Build context using semantic retrieval
+        let userProfileContext = '';
+        try {
+          const queryEmbedding = await embedUserMessage(content);
+          const pinned = getPinnedMemories(semanticMemories);
+          const relevant = searchMemories(semanticMemories, queryEmbedding, 10);
+          userProfileContext = buildSemanticContext(pinned, relevant);
+        } catch (retrievalError) {
+          // Fallback to legacy context if semantic retrieval fails
+          console.warn('Semantic retrieval failed, using legacy fallback:', retrievalError.message);
+          userProfileContext = buildUserProfileContext(latestMemory, content);
+        }
+
+        // Build conversation history from recent messages (limit to last 20 for token savings)
+        const recentHistory = messages
+          .slice(-20)
+          .map((msg) => ({
+            role: msg.role === 'assistant' ? 'assistant' : 'user',
+            content: msg.content,
+          }));
+
         const response = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             input: content,
-            userProfileContext: buildUserProfileContext(latestMemory, content),
+            history: recentHistory,
+            userProfileContext,
           }),
         });
 
@@ -252,7 +312,7 @@ export function useChatSessions(user) {
         setSending(false);
       }
     },
-    [user, sending, createNewChat, chats, memory],
+    [user, sending, createNewChat, chats, memory, semanticMemories],
   );
 
   return {
@@ -265,6 +325,8 @@ export function useChatSessions(user) {
     error,
     memory,
     memoryLoading,
+    semanticMemories,
+    semanticMemoriesLoading,
     createNewChat,
     selectChat,
     deleteChat: deleteChatSession,

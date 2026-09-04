@@ -89,7 +89,7 @@ const Sidebar = ({
             </svg>
           </button>
         )}
-        {isOpen && <div className="sidebar-title" style={{ flex: 1 }}>KrishnaGPT</div>}
+        {isOpen && <div className="sidebar-title" style={{ flex: 1 }}>The Compass</div>}
         {isOpen && (
           <button className="sidebar-close" onClick={onClose} aria-label="Close sidebar" style={{ display: 'block', fontSize: '28px', lineHeight: 1 }}>
             ×
