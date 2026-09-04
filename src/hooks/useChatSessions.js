@@ -42,6 +42,7 @@ export function useChatSessions(user) {
   const [chatsLoading, setChatsLoading] = useState(true);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [streamingMessage, setStreamingMessage] = useState('');
   const [error, setError] = useState('');
   const [memory, setMemory] = useState(EMPTY_MEMORY);
   const [memoryLoading, setMemoryLoading] = useState(true);
@@ -292,14 +293,56 @@ export function useChatSessions(user) {
           }),
         });
 
-        const data = await response.json();
-
         if (!response.ok) {
-          throw new Error(data.error || 'Request failed');
+          let errorData;
+          try {
+             errorData = await response.json();
+          } catch(e) {
+             throw new Error('Request failed with status ' + response.status);
+          }
+          throw new Error(errorData.error || 'Request failed');
         }
 
-        await addMessage(user.uid, chatId, 'assistant', data.text || 'No response text returned.');
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let fullText = '';
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          
+          // Keep the last partial line in the buffer
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.trim().startsWith('data: ')) {
+              const dataStr = line.replace('data: ', '').trim();
+              if (!dataStr) continue;
+              
+              try {
+                const parsed = JSON.parse(dataStr);
+                if (parsed.error) {
+                   throw new Error(parsed.error);
+                }
+                if (parsed.chunk) {
+                   fullText += parsed.chunk;
+                   setStreamingMessage(fullText);
+                }
+              } catch (e) {
+                 // ignore JSON parse errors for incomplete chunks
+              }
+            }
+          }
+        }
+
+        await addMessage(user.uid, chatId, 'assistant', fullText || 'No response text returned.');
+        setStreamingMessage('');
       } catch (requestError) {
+        setStreamingMessage('');
         const fallbackMessage = `Error: ${requestError.message || 'Unknown error'}`;
         const chatId = activeChatIdRef.current;
 
@@ -317,7 +360,9 @@ export function useChatSessions(user) {
 
   return {
     chats,
-    messages,
+    messages: streamingMessage 
+      ? [...messages, { id: 'streaming-active', role: 'assistant', content: streamingMessage }]
+      : messages,
     activeChatId,
     chatsLoading,
     messagesLoading,
