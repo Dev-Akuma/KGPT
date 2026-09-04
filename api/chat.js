@@ -1,5 +1,5 @@
 import { createMistral } from '@ai-sdk/mistral';
-import { generateText, generateObject } from 'ai';
+import { streamText, generateObject } from 'ai';
 import { z } from 'zod';
 
 const mistral = createMistral({
@@ -110,16 +110,39 @@ export default async function handler(req, res) {
     // Add the current user message
     chatMessages.push({ role: 'user', content: input });
 
-    const { text } = await generateText({
+    // 3. Stream the response via Server-Sent Events
+    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+    res.flushHeaders();
+
+    const result = streamText({
       model: mistral(selectedModel),
       system: systemPrompt,
       messages: chatMessages,
     });
 
-    return res.status(200).json({ text: text || 'No response text returned.' });
+    for await (const chunk of result.textStream) {
+      if (chunk) {
+        // SSE format: "data: <payload>\n\n"
+        res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
+      }
+    }
+
+    // Signal stream end
+    res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+    res.end();
   } catch (error) {
     console.error('Error in chat handler:', error);
     const message = error?.message || 'Unknown upstream error';
-    return res.status(500).json({ error: `Request failed: ${message}` });
+    
+    // If headers already sent (streaming started), send error as SSE event
+    if (res.headersSent) {
+      res.write(`data: ${JSON.stringify({ error: message })}\n\n`);
+      res.end();
+    } else {
+      return res.status(500).json({ error: `Request failed: ${message}` });
+    }
   }
 }

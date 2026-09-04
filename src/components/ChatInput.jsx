@@ -55,7 +55,7 @@ const ChatInput = ({ value, onChange, onSend, loading }) => {
             onChange={(event) => onChange(event.target.value)}
             onKeyDown={handleKeyDown}
             className="chat-textarea"
-            placeholder="How am I guide you today?"
+            placeholder="How can I guide you today?"
             disabled={loading}
           />
         </div>
