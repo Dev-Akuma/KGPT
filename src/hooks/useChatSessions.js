@@ -319,9 +319,11 @@ export function useChatSessions(user) {
           buffer = lines.pop() || '';
 
           for (const line of lines) {
-            if (line.trim().startsWith('data: ')) {
-              const dataStr = line.replace('data: ', '').trim();
+            const trimmedLine = line.trim();
+            if (trimmedLine.startsWith('data:')) {
+              const dataStr = trimmedLine.replace(/^data:\s*/, '').trim();
               if (!dataStr) continue;
+              if (dataStr === '[DONE]') continue;
               
               try {
                 const parsed = JSON.parse(dataStr);

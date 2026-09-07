@@ -1,296 +1,239 @@
-# KGPT
+# The Compass 🧭
 
-KGPT is a Krishna-inspired AI guidance chat application focused on calm, reflective conversations. It combines a modern chat experience with personalization features, optional therapeutic UX modules, Firebase-backed persistence, and serverless AI APIs on Vercel.
+**The Compass** is a modern, reflective AI guidance application designed to help users think clearly, gain self-awareness, and process life decisions through honest, non-judgmental dialogue. 
 
-## What The App Does
+Moving away from generic platitudes and superficial motivational advice, **The Compass** acts as a sharp, empathetic companion. Powered by a multi-tier LLM architecture, real-time Server-Sent Events (SSE) streaming, a structured subconscious memory engine, and Firebase persistence, it delivers personalized, context-aware conversations that evolve over time.
 
-- Supports guest chat mode for temporary conversations.
-- Supports authenticated mode with persistent chats and memory profile.
-- Uses long-term profile memory to personalize responses.
-- Provides guided UX modules for wellbeing:
-  - Daily mood check-in.
-  - Daily wisdom reflection card.
-  - Personalized session greeting.
-  - Guided conversation starters.
-- Includes assistant typing animation and polished sidebar/profile interactions.
+---
 
-## Core Experience
+## 🌟 Key Features
 
-- Conversational AI assistant inspired by Bhagavad Gita principles.
-- Message-by-message chat interface with markdown rendering.
-- Session and historical chat support.
-- Personalized follow-up context using stored memory insights.
+### 💬 Mindful & Anti-Generic Conversational AI
+- **Honest & Direct Guidance**: Focuses on clarity, reframing premises, and non-syrupy, actionable insights rather than repetitive validation.
+- **Multi-Turn Chat Streaming**: Low-latency token-by-token response streaming built on Server-Sent Events (SSE).
+- **Markdown & Code Support**: Full rich-text rendering with `react-markdown`, `remark-gfm`, and `remark-breaks`.
+- **Character Typing Animation**: Smooth visual streaming with dynamic cancellation on new user submissions.
 
-## Feature Highlights
+### 🧠 Subconscious Memory Architect
+- **Atomic Delta Extraction Engine**: Automatically extracts new, non-duplicative user facts from conversation history using structured Zod schemas.
+- **5-Tier Fact Categorization**:
+  - `core_essence`: Values, goals, identity, and life milestones.
+  - `ecosystem`: Key people, relationships, and sentiment.
+  - `shadow_work`: Recurring anxieties, fears, and triggers.
+  - `daily_routine`: Current focus, habits, projects, and routines.
+  - `ephemeral`: Transient thoughts and current state of mind.
+- **Dynamic Context Injection**: Injects pinned and relevant memory profile context into downstream AI system prompts for deep personalization.
 
-### Chat and Message UX
+### ⚡ Intent Router & Dynamic Model Mesh
+- **Guardian Gatekeeper Layer**: Micro-LLM classifier (`ministral-3b-2512`) inspects incoming prompts and categorizes intent (`DEEP_GUIDANCE`, `DAILY_REFLECTION`, `CASUAL_MANTRA`).
+- **Dynamic Model Allocation**:
+  - `DEEP_GUIDANCE` → `ministral-14b-2512` (High-capacity reasoning for complex life decisions).
+  - `DAILY_REFLECTION` / `CASUAL_MANTRA` → `ministral-8b-2512` (Fast, efficient responses for daily check-ins).
 
-- Assistant typing animation renders responses character-by-character.
-- Ongoing typing animation is force-completed if user sends a new message.
-- Thinking indicator shown while waiting for assistant response.
-- Markdown formatting support for assistant messages.
+### 🌿 Well-being & Reflection UX Modules
+- **Interactive Mood Check-in**: Track daily emotional states with visual mood selectors.
+- **Mood Calendar & Streak Tracker**: Visualize historical mood trends and maintain continuous reflection streaks.
+- **Daily Wisdom Card**: Contextual daily quotes and reflections presented once per day.
+- **Personalized Session Greetings**: Tailored greetings synthesized from stored memory insights.
 
-### Empty-State Guidance
+### 🔒 Dual-Mode Access & Cloud Persistence
+- **Guest Mode**: Privacy-focused, in-memory local session for instant interaction without sign-in.
+- **Authenticated Mode**: Full Cloud Firestore synchronisation backed by Firebase Authentication (Email/Password & Google Sign-In).
 
-- Starter prompts shown only when a chat is empty.
-- Starter clicks auto-send the selected prompt.
-- Starter cards auto-hide once messages exist.
+---
 
-### Mood and Reflection Modules
-
-- Daily mood check-in card shown once per session.
-- Mood choices auto-send contextual user messages.
-- Daily wisdom quote card shown once per day.
-- Personalized session greeting generated from memory insights.
-- Generic greeting fallback when no memory is available.
-
-### Sidebar and Conversation Management
-
-- Responsive sidebar:
-  - Desktop: layout sidebar.
-  - Mobile/tablet: overlay drawer.
-- Chat deletion per conversation with confirmation prompt.
-- Active chat reset behavior on delete.
-
-### Profile and Personalization UX
-
-- Avatar button with image fallback to initials.
-- Profile dropdown menu:
-  - Settings.
-  - Personalization.
-  - Upgrade Plan placeholder.
-  - Help.
-  - Log Out.
-- Personalization panel integrates memory controls and editing.
-
-## Tech Stack
-
-- Frontend: React 19 + Vite
-- Backend: Vercel Serverless Functions (`/api/*`)
-- AI: `@ai-sdk/mistral` (Model Mesh: `ministral-3b`, `mistral-small`, `codestral`)
-- Auth + Database: Firebase Authentication + Firestore
-- Deployment: Vercel
-
-## Architecture Overview
-
-- Frontend sends chat requests to `/api/chat`.
-- Memory extraction requests go to `/api/memory/extract`.
-- Authenticated chat history and memory profile are stored in Firestore.
-- Guest chat runs local in-memory state only.
-
-## Project Structure
+## 🛠️ Architecture & System Design
 
 ```text
-KGPT/
-  api/
-    chat.js
-    memory/
-      extract.js
-  public/
-  src/
-    components/
-      CalmBackground.jsx
-      ChatInput.jsx
-      ChatWindow.jsx
-      DailyWisdomCard.jsx
-      MessageBubble.jsx
-      MoodCheckInCard.jsx
-      SessionGreetingCard.jsx
-      Sidebar.jsx
-      UserProfilePanel.jsx
-      UtilityPanel.jsx
-    hooks/
-      useChatSessions.js
-    pages/
-      ChatPage.jsx
-      LoginPage.jsx
-    services/
-      authService.js
-      chatService.js
-      firebase.js
-      userMemoryService.js
-    useGuestChat.js
+┌─────────────────────────────────────────────────────────────────────────┐
+│                            React 19 Frontend                            │
+│           (Vite + Custom CSS Modules + Interactive Background)           │
+└────────────────────────────────────┬────────────────────────────────────┘
+                                     │
+                    POST /api/chat   │   POST /api/memory/extract
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                   Vercel Serverless Edge API Layer                      │
+├────────────────────────────────────┬────────────────────────────────────┤
+│ 1. Intent Classification Router    │ 2. Subconscious Memory Architect   │
+│    (ministral-3b + Zod Schema)     │    (Delta Fact Extraction + Zod)  │
+├────────────────────────────────────┼────────────────────────────────────┤
+│ 3. Dynamic Model Dispatch          │ 4. SSE Realtime Text Stream        │
+│    (ministral-8b / 14b)            │    (streamText Event Stream)      │
+└────────────────────────────────────┴────────────────────────────────────┘
+                                     │
+                         Firestore   │   Firebase Auth
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                      Firebase Cloud Infrastructure                      │
+│     - Auth: Google OAuth / Email / Anonymous                            │
+│     - Firestore: `users/{uid}/chats/{chatId}/messages`                 │
+│     - Memory Doc: `users/{uid}/profile/memory`                          │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Environment Variables
+---
 
-Create a `.env` file in the project root.
+## 💻 Tech Stack
+
+- **Frontend**: React 19, Vite, Vanilla CSS / Custom Animations, `ogl` (WebGL canvas background)
+- **Backend / APIs**: Vercel Serverless Functions (Node.js ES Modules)
+- **AI Core & Orchestration**: Vercel AI SDK (`ai`), `@ai-sdk/mistral`, Zod Structured Output Parsing
+- **LLM Engine**: Mistral AI Mesh (`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`)
+- **Authentication & Database**: Firebase Auth, Google OAuth, Cloud Firestore
+- **Deployment & Hosting**: Vercel
+
+---
+
+## 📁 Project Structure
+
+```text
+The-Compass/
+├── api/
+│   ├── chat.js                  # SSE Streaming handler + Intent Classifier Router
+│   └── memory/
+│       └── extract.js           # Subconscious Memory Delta Extractor API
+├── public/
+├── src/
+│   ├── assets/                  # Icons, graphics, and visual assets
+│   ├── components/
+│   │   ├── CalmBackground.jsx    # WebGL / OGL smooth ambient canvas
+│   │   ├── ChatInput.jsx         # Auto-resizing input box with action triggers
+│   │   ├── ChatWindow.jsx        # Scroll-managed chat feed with typing indicator
+│   │   ├── DailyWisdomCard.jsx   # Reflection card overlay
+│   │   ├── MessageBubble.jsx     # Markdown renderer with code formatting
+│   │   ├── MoodCalendar.jsx      # Visual calendar view for historical moods
+│   │   ├── MoodCheckInCard.jsx   # Interactive daily mood prompt
+│   │   ├── Sidebar.jsx           # Conversation thread management & drawer
+│   │   └── UserProfilePanel.jsx # Profile settings & memory controls
+│   ├── hooks/
+│   │   └── useChatSessions.js   # Firestore chat sync hook
+│   ├── pages/
+│   │   ├── ChatPage.jsx         # Main application workspace
+│   │   └── LoginPage.jsx        # Auth landing page
+│   ├── services/
+│   │   ├── authService.js       # Firebase Auth workflows
+│   │   ├── chatService.js       # Stream consumer service for SSE API
+│   │   ├── firebase.js          # Firebase SDK initialization
+│   │   ├── memoryStoreService.js# Client memory cache & Firestore sync
+│   │   └── moodService.js       # Mood logging & analytics service
+│   └── main.jsx
+├── package.json
+└── vite.config.js
+```
+
+---
+
+## 🔌 API Reference
+
+### `POST /api/chat`
+Streams assistant responses token-by-token via Server-Sent Events (SSE).
+
+**Request Body:**
+```json
+{
+  "input": "I am feeling stuck between sticking with my job and starting a company.",
+  "userProfileContext": "Core goals: independence; Shadow work: fear of financial instability.",
+  "history": [
+    { "role": "user", "content": "I need some advice on career decisions." },
+    { "role": "assistant", "content": "What is driving the urge to change right now?" }
+  ]
+}
+```
+
+**Response Format:** `text/event-stream`
+```text
+data: {"chunk":"It sounds like "}
+data: {"chunk":"you are weighing security against autonomy..."}
+...
+data: {"done":true}
+```
+
+---
+
+### `POST /api/memory/extract`
+Extracts new, non-duplicative atomic user insights to update the user's subconscious memory profile.
+
+**Request Body:**
+```json
+{
+  "messages": [
+    "I'm working on a new React app called The Compass.",
+    "Sometimes I struggle with time management on weekends."
+  ],
+  "existingMemories": [
+    { "fact": "User is a developer." }
+  ]
+}
+```
+
+**Response:** `application/json`
+```json
+{
+  "memories": [
+    {
+      "fact": "User is building a React app named The Compass",
+      "category": "daily_routine",
+      "isPinned": false
+    },
+    {
+      "fact": "User struggles with weekend time management",
+      "category": "shadow_work",
+      "isPinned": false
+    }
+  ]
+}
+```
+
+---
+
+## ⚡ Getting Started
+
+### 1. Prerequisites
+- Node.js (v18+ recommended)
+- A Mistral AI API key
+- A Firebase Project (with Auth & Firestore enabled)
+
+### 2. Environment Setup
+Create a `.env` file in the root directory:
 
 ```env
-# AI backend
+# Server-side API key (Vercel Serverless)
 MISTRAL_API_KEY=your_mistral_api_key_here
 
-# Firebase client config
-VITE_FIREBASE_API_KEY=...
-VITE_FIREBASE_AUTH_DOMAIN=...
-VITE_FIREBASE_PROJECT_ID=...
-VITE_FIREBASE_STORAGE_BUCKET=...
-VITE_FIREBASE_MESSAGING_SENDER_ID=...
-VITE_FIREBASE_APP_ID=...
+# Client-side Firebase Configuration
+VITE_FIREBASE_API_KEY=your_firebase_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
 ```
 
-Notes:
-
-- `MISTRAL_API_KEY` is required by `api/chat.js` and `api/memory/extract.js`.
-- Only `VITE_*` variables are exposed to frontend code.
-- Firebase values must belong to the same Firebase project.
-
-## Local Development
-
-### 1) Install dependencies
+### 3. Installation & Local Development
 
 ```bash
+# Install dependencies
 npm install
-```
 
-### 2) Run frontend
-
-```bash
+# Run frontend dev server
 npm run dev
-```
 
-### 3) Run local serverless APIs (recommended)
-
-Use Vercel CLI for full local parity with production APIs.
-
-```bash
+# Run full serverless stack locally (Vercel CLI)
 vercel dev
 ```
 
-Important:
+---
 
-- The current Vite proxy in `vite.config.js` points `/api` to `http://localhost:3001`.
-- Since backend is serverless (not Express), prefer `vercel dev` for API testing.
-- If you only run `npm run dev`, API calls may fail unless proxy target is adjusted.
+## 🚀 Deployment
 
-## Available Scripts
+1. Push your repository to GitHub.
+2. Import the repository into your **Vercel** dashboard.
+3. Configure the Environment Variables (`MISTRAL_API_KEY` and `VITE_FIREBASE_*`).
+4. Deploy! Vercel automatically exposes the `/api/chat` and `/api/memory/extract` endpoints as serverless functions.
 
-- `npm run dev` starts Vite dev server.
-- `npm run build` builds production frontend assets.
-- `npm run preview` previews production frontend build.
-- `npm run lint` runs ESLint.
+---
 
-## API Reference
+## 📄 License
 
-### `POST /api/chat`
-
-Generates assistant text.
-
-Request:
-
-```json
-{
-  "input": "I feel uncertain about my career.",
-  "userProfileContext": "Traits: reflective, disciplined"
-}
-```
-
-Response:
-
-```json
-{
-  "text": "...assistant response..."
-}
-```
-
-Notes:
-
-- `userProfileContext` is optional.
-- Returns `405` for non-POST.
-
-### `POST /api/memory/extract`
-
-Extracts structured memory insights from a user message.
-
-Request:
-
-```json
-{
-  "message": "I overthink exams and want a consistent routine."
-}
-```
-
-Response:
-
-```json
-{
-  "insights": {
-    "traits": ["reflective"],
-    "habits": ["inconsistent routine"],
-    "concerns": ["exam anxiety"],
-    "goals": ["build consistency"],
-    "archetypes": ["reflective overthinker"],
-    "communication_style": "calm, concise",
-    "insights": ["benefits from structured planning"]
-  }
-}
-```
-
-Notes:
-
-- Returns `405` for non-POST.
-- Backend sanitizes and parses JSON output from model response.
-
-## Data Model
-
-Authenticated user data is stored under:
-
-- `users/{uid}`
-- `users/{uid}/chats/{chatId}`
-- `users/{uid}/chats/{chatId}/messages/{messageId}`
-- `users/{uid}/profile/memory`
-
-Chat docs include metadata like title and timestamps.
-
-Message docs include role, content, and timestamp.
-
-Memory doc includes:
-
-- `traits`, `habits`, `concerns`, `goals`, `archetypes`, `insights`
-- `communication_style`
-- `memoryEnabled`
-
-## Client Storage Keys
-
-The app uses browser storage to control one-time UX modules.
-
-- `sessionStorage['kgpt:mood-checkin-shown']`
-- `sessionStorage['kgpt:daily-wisdom-session-date']`
-- `sessionStorage['kgpt:session-greeting-shown']`
-- `localStorage['kgpt:daily-wisdom-last-date']`
-
-## Deployment (Vercel)
-
-1. Push repository to GitHub.
-2. Import project in Vercel.
-3. Add environment variables:
-  - `MISTRAL_API_KEY`
-  - all required `VITE_FIREBASE_*` values
-4. Deploy.
-
-Expected production API routes:
-
-- `/api/chat`
-- `/api/memory/extract`
-
-## Troubleshooting
-
-- `404` for `/api/chat` or `/api/memory/extract` in production.
-- Ensure `api/chat.js` and `api/memory/extract.js` exist at repo root and redeploy.
-
-- `Missing MISTRAL_API_KEY`.
-- Add `MISTRAL_API_KEY` in Vercel project env vars and redeploy.
-
-- Firebase auth/provider errors (`configuration-not-found`, `operation-not-allowed`, `unauthorized-domain`).
-- Verify Firebase project config, enabled providers, and authorized domains.
-
-- Local dev chat API failures with `npm run dev`.
-- Use `vercel dev` or update `vite.config.js` API proxy target to a running local API endpoint.
-
-## Product Direction Notes
-
-KGPT is designed as supportive reflective guidance, inspired by Krishna's wisdom.
-
-- It does not claim to be Krishna.
-- It is not a replacement for professional medical or mental health care.
-- For severe distress or crisis, users should seek immediate qualified support.
+This project is open-source under the MIT License.
